@@ -108,6 +108,152 @@
 
 ## 🗺️ User Journey Maps
 
+### Journey 0: First-Run Legal Acceptance (ALL Users - REQUIRED)
+
+> **Critical:** This journey happens BEFORE any other feature access. Users MUST accept Terms & Conditions before using the app.
+
+#### Stage 1: App Launch (First Time)
+**What they're doing:** Opening the application for the first time  
+**Thinking:** "Let's see what this app can do"  
+**Feeling:** 😊 Curious, eager to explore  
+**System Action:**
+- Check localStorage for `legal-consent-accepted`
+- If not found → Show legal modal (blocks all other UI)
+- If found → Skip to main app
+
+**UI State:**
+- Full-screen modal overlay (cannot be dismissed)
+- Blurred/dark background
+- No access to app features until acceptance
+
+#### Stage 2: Reading Legal Terms
+**What they're doing:** Reviewing Terms of Service and Disclaimer  
+**Thinking:** "What am I agreeing to? Is this safe? What are my responsibilities?"  
+**Feeling:** 🤔 Cautious, reading carefully  
+**Pain Points:**
+- Legal text is boring/overwhelming
+- Want to use app but must read terms
+- Concerned about legal implications
+- May not understand all legal language
+
+**Opportunity:**
+- Make legal terms clear and scannable
+- Use ✅/❌ formatting for easy comprehension
+- Highlight user responsibilities
+- Link to full docs for detailed reading
+- Show "why this matters" context
+
+**UI Requirements:**
+- Scrollable content area with legal text
+- Prominent warnings in yellow/red
+- Clear sections: "What you agree to", "What we don't do", "Your responsibilities"
+- Links to DISCLAIMER.md and LICENSE (open in new tab)
+- Visual hierarchy (headers, bullet points, emphasis)
+
+#### Stage 3: Acknowledging Responsibilities
+**What they're doing:** Checking required checkboxes  
+**Thinking:** "I understand I'm responsible for my downloads. I won't violate YouTube ToS."  
+**Feeling:** 🤷 Accepting responsibility, ready to proceed  
+**Interactions:**
+- [ ] Read and understand Legal Disclaimer
+- [ ] Read GPL-3.0 License
+- [ ] Acknowledge sole responsibility for legal use
+
+**UI Requirements:**
+- 3 checkboxes (ALL required before proceeding)
+- Each checkbox has label with linked documentation
+- Final checkbox emphasizes user responsibility (bold/highlighted)
+- "I Accept" button disabled until all checked
+- Clear visual feedback when hovering disabled button
+
+**Validation:**
+- ALL 3 checkboxes must be checked
+- "I Accept" button grayed out until complete
+- Tooltip explains why button is disabled
+- Cannot bypass or skip this step
+
+#### Stage 4: Decision Point
+**What they're doing:** Deciding whether to accept or decline  
+**Thinking:** "Do I agree to these terms? Can I trust this tool?"  
+**Feeling:** 🤔 Weighing options  
+**Actions Available:**
+- **Accept:** Proceed to main app (preferred path)
+- **Decline:** Exit application (safety valve)
+
+**UI Requirements:**
+- Two action buttons:
+  - "Decline & Exit" (left, gray, secondary)
+  - "I Accept - Continue" (right, blue, primary)
+- Decline shows confirmation: "Declining will close the application"
+- Accept only enabled when all checkboxes checked
+- Clear visual distinction between actions
+
+#### Stage 5: Acceptance & Entry
+**What they're doing:** Clicking "I Accept - Continue"  
+**Thinking:** "Okay, I understand my responsibilities. Let's use the app!"  
+**Feeling:** ✅ Confident, ready to explore  
+**System Action:**
+- Store acceptance in localStorage:
+  - `legal-consent-accepted: "1.0.0"`
+  - `legal-consent-date: "2026-02-13T22:30:00Z"`
+  - `legal-consent-user-agent: "Mozilla/5.0..."`
+- Log acceptance event (analytics, if enabled)
+- Close modal
+- Show main application interface
+
+**Post-Acceptance:**
+- Never show modal again (unless ToS version upgraded)
+- User can review terms in Settings → Legal
+- User can revoke consent (forces app restart)
+
+#### Error Cases & Edge Cases
+
+**Case 1: User clicks Accept without checking boxes**
+- Show alert: "Please check all required boxes before proceeding"
+- Keep modal open
+- Highlight unchecked boxes
+
+**Case 2: User closes browser tab/window**
+- Consent NOT saved
+- Modal shows again on next visit
+
+**Case 3: Terms updated (version 1.0.0 → 1.1.0)**
+- Stored version doesn't match current
+- Modal shown again (forced re-acceptance)
+- Previous acceptance date preserved for records
+
+**Case 4: User clicks links to DISCLAIMER.md/LICENSE**
+- Open in new browser tab
+- Modal stays open in background
+- User can read full terms, then return to accept
+
+**Case 5: User clicks "Decline & Exit"**
+- Show confirmation dialog
+- If confirmed → window.close() or redirect to about:blank
+- Consent NOT saved
+
+#### Success Metrics
+- **Acceptance Rate:** % of users who accept vs decline
+- **Time to Accept:** How long users spend reading terms
+- **Checkbox Completion:** Which checkboxes get checked first
+- **Link Clicks:** Do users click to read full DISCLAIMER.md?
+
+#### Accessibility Requirements
+- Keyboard navigation (Tab through checkboxes, Enter to accept)
+- Screen reader compatible
+- High contrast text (WCAG AA)
+- Focus indicators on interactive elements
+- Clear error messages
+
+#### Mobile Considerations
+- Modal fits mobile screens (max-height: 95vh)
+- Scrollable content (long legal text)
+- Touch-friendly checkboxes (larger tap targets)
+- Stack buttons vertically on small screens
+- Readable font size (min 14px)
+
+---
+
 ### Journey 1: Download & Play First Song (New User - Alex)
 
 #### Stage 1: Discovery
@@ -962,6 +1108,77 @@ graph TD
 
 ---
 
+## 🎨 Mermaid Flow Diagrams
+
+### Journey 0: First-Run Legal Acceptance (ALL Users)
+
+```mermaid
+flowchart TD
+    Start([User Opens App<br/>First Time]) --> CheckConsent{Check localStorage:<br/>legal-consent-accepted?}
+    
+    CheckConsent -->|Not Found| ShowModal[Show Legal Modal<br/>🔴 BLOCKS ALL FEATURES]
+    CheckConsent -->|Found & Current Version| MainApp[Enter Main Application]
+    CheckConsent -->|Found But Old Version| ShowModal
+    
+    ShowModal --> ReadTerms[User Reads Legal Terms]
+    ReadTerms --> Section1[📄 Legal Disclaimer Section]
+    ReadTerms --> Section2[⚖️ License Information]
+    ReadTerms --> Section3[❌ What We DON'T Do]
+    ReadTerms --> Section4[✅ Your Responsibilities]
+    
+    Section1 & Section2 & Section3 & Section4 --> Checkboxes[User Checks 3 Required Boxes]
+    
+    Checkboxes --> Check1{✓ Read Disclaimer?}
+    Checkboxes --> Check2{✓ Read License?}
+    Checkboxes --> Check3{✓ Acknowledge<br/>Responsibility?}
+    
+    Check1 & Check2 & Check3 -->|All Checked| EnableButton[Enable 'I Accept' Button]
+    Check1 & Check2 & Check3 -->|Missing Any| DisableButton[Keep Button Disabled<br/>Show Tooltip]
+    
+    DisableButton --> Checkboxes
+    
+    EnableButton --> Decision{User Decision}
+    
+    Decision -->|Click 'I Accept'| SaveConsent[Save to localStorage:<br/>- Version: 1.0.0<br/>- Date: Now<br/>- User Agent]
+    Decision -->|Click 'Decline'| Confirm{Confirm Exit?}
+    
+    Confirm -->|Yes| ExitApp([Close Application])
+    Confirm -->|No| ReadTerms
+    
+    SaveConsent --> LogEvent[Log Acceptance Event<br/>Optional Analytics]
+    LogEvent --> MainApp
+    
+    MainApp --> Features[Access All Features:<br/>- Download<br/>- Library<br/>- Playlists<br/>- Settings]
+    
+    Features --> Settings[User Can Visit<br/>Settings → Legal]
+    Settings --> ReviewConsent[Review Acceptance:<br/>- Date accepted<br/>- View terms<br/>- Revoke option]
+    
+    ReviewConsent --> Revoke{User Clicks<br/>'Revoke Consent'?}
+    Revoke -->|Yes| ClearStorage[Clear localStorage]
+    ClearStorage --> Reload([Reload App])
+    Reload --> Start
+    
+    Revoke -->|No| Features
+    
+    style Start fill:#4CAF50
+    style ShowModal fill:#ff6b6b
+    style MainApp fill:#4CAF50
+    style EnableButton fill:#4CAF50
+    style DisableButton fill:#ffd93d
+    style SaveConsent fill:#6BCF7F
+    style ExitApp fill:#ff6b6b
+    style Features fill:#4CAF50
+```
+
+**Key Points:**
+- 🔴 **Blocking:** Modal cannot be dismissed or bypassed
+- ✅ **Required:** All 3 checkboxes must be checked
+- 💾 **Persistent:** Acceptance stored in localStorage
+- 🔄 **Versioned:** ToS updates require re-acceptance
+- ⚙️ **Revocable:** Users can revoke from Settings
+
+---
+
 ## 📊 How to View Mermaid Diagrams
 
 ### In VS Code (Recommended)
@@ -988,4 +1205,8 @@ graph TD
 
 ---
 
-**Updated:** Added Morgan persona, bulk download flows, export/transfer capabilities, and complete Mermaid flow diagrams for all 4 user journeys.
+**Updated:** 
+- Added Morgan persona, bulk download flows, export/transfer capabilities
+- Complete Mermaid flow diagrams for all 4 user journeys
+- **NEW:** Journey 0 - First-Run Legal Acceptance (TC/ToS approval required before app use)
+- Comprehensive legal acceptance flow with validation, error cases, and accessibility requirements
