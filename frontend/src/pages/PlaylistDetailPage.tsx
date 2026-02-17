@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { apiClient, type PlaylistWithItems } from '../api/client';
 import { usePlayerStore, type Track } from '../stores/playerStore';
@@ -100,6 +100,22 @@ export function PlaylistDetailPage() {
     }
   };
 
+  const handleRemoveItem = useCallback(
+    async (mediaId: string) => {
+      if (!id) {
+        return;
+      }
+
+      try {
+        const response = await apiClient.playlists.removeItem(id, mediaId);
+        setPlaylist(response.data);
+      } catch (error) {
+        console.error('Failed to remove item from playlist:', error);
+      }
+    },
+    [id]
+  );
+
   if (isLoading) {
     return (
       <div className="page playlist-detail-page">
@@ -115,7 +131,12 @@ export function PlaylistDetailPage() {
       <div className="page playlist-detail-page">
         <div className="error-state">
           <h2 className="error-state-title">Playlist not found</h2>
-          <button className="primary-button" onClick={() => navigate('/playlists')}>
+          <button
+            className="primary-button"
+            onClick={() => {
+              navigate('/playlists');
+            }}
+          >
             Back to Playlists
           </button>
         </div>
@@ -139,13 +160,17 @@ export function PlaylistDetailPage() {
               <input
                 type="text"
                 value={editName}
-                onChange={(e) => setEditName(e.target.value)}
+                onChange={(e) => {
+                  setEditName(e.target.value);
+                }}
                 className="edit-name-input"
                 placeholder="Playlist name"
               />
               <textarea
                 value={editDescription}
-                onChange={(e) => setEditDescription(e.target.value)}
+                onChange={(e) => {
+                  setEditDescription(e.target.value);
+                }}
                 className="edit-description-input"
                 placeholder="Description"
                 rows={2}
@@ -153,14 +178,13 @@ export function PlaylistDetailPage() {
               <div className="edit-actions">
                 <button
                   className="cancel-button"
-                  onClick={() => setIsEditing(false)}
+                  onClick={() => {
+                    setIsEditing(false);
+                  }}
                 >
                   Cancel
                 </button>
-                <button
-                  className="save-button"
-                  onClick={() => void handleSaveEdit()}
-                >
+                <button className="save-button" onClick={() => void handleSaveEdit()}>
                   Save
                 </button>
               </div>
@@ -191,7 +215,9 @@ export function PlaylistDetailPage() {
           <>
             <button
               className="action-button"
-              onClick={() => setIsEditing(true)}
+              onClick={() => {
+                setIsEditing(true);
+              }}
               aria-label="Edit playlist"
             >
               <EditIcon />
@@ -210,12 +236,13 @@ export function PlaylistDetailPage() {
       {playlist.items.length === 0 ? (
         <div className="empty-state">
           <h2 className="empty-state-title">This playlist is empty</h2>
-          <p className="empty-state-description">
-            Add songs from your library
-          </p>
+          <p className="empty-state-description">Add songs from your library</p>
         </div>
       ) : (
-        <MediaList media={media} />
+        <MediaList
+          media={media}
+          onRemove={!playlist.isSystem ? (mediaId) => void handleRemoveItem(mediaId) : undefined}
+        />
       )}
     </div>
   );
@@ -226,9 +253,9 @@ function formatDuration(seconds: number): string {
   const minutes = Math.floor((seconds % 3600) / 60);
 
   if (hours > 0) {
-    return `${hours} hr ${minutes} min`;
+    return `${String(hours)} hr ${String(minutes)} min`;
   }
-  return `${minutes} min`;
+  return `${String(minutes)} min`;
 }
 
 function PlaylistIcon() {

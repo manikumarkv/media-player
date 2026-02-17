@@ -1,38 +1,27 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { apiClient, type Playlist } from '../api/client';
+import { usePlaylistStore } from '../stores/playlistStore';
 import './Pages.css';
 
 export function PlaylistsPage() {
-  const [playlists, setPlaylists] = useState<Playlist[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { playlists, isLoading, fetchPlaylists, createPlaylist } = usePlaylistStore();
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   useEffect(() => {
-    const fetchPlaylists = async () => {
-      setIsLoading(true);
-      try {
-        const response = await apiClient.playlists.list();
-        setPlaylists(response.data);
-      } catch (error) {
-        console.error('Failed to fetch playlists:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     void fetchPlaylists();
-  }, []);
+  }, [fetchPlaylists]);
 
   const handleCreatePlaylist = async (name: string, description?: string) => {
     try {
-      const response = await apiClient.playlists.create({ name, description });
-      setPlaylists([response.data, ...playlists]);
+      await createPlaylist(name, description);
       setShowCreateModal(false);
     } catch (error) {
       console.error('Failed to create playlist:', error);
     }
   };
+
+  // Filter out system playlists
+  const userPlaylists = playlists.filter((p) => !p.isSystem);
 
   return (
     <div className="page playlists-page">
@@ -41,7 +30,9 @@ export function PlaylistsPage() {
           <h1 className="page-title">Playlists</h1>
           <button
             className="create-playlist-button"
-            onClick={() => setShowCreateModal(true)}
+            onClick={() => {
+              setShowCreateModal(true);
+            }}
           >
             <PlusIcon />
             New Playlist
@@ -55,41 +46,35 @@ export function PlaylistsPage() {
         </div>
       )}
 
-      {!isLoading && playlists.length === 0 && (
+      {!isLoading && userPlaylists.length === 0 && (
         <div className="empty-state">
           <div className="empty-state-icon">
             <PlaylistIcon />
           </div>
           <h2 className="empty-state-title">Create your first playlist</h2>
-          <p className="empty-state-description">
-            Organize your music into playlists
-          </p>
+          <p className="empty-state-description">Organize your music into playlists</p>
           <button
             className="primary-button"
-            onClick={() => setShowCreateModal(true)}
+            onClick={() => {
+              setShowCreateModal(true);
+            }}
           >
             Create Playlist
           </button>
         </div>
       )}
 
-      {!isLoading && playlists.length > 0 && (
+      {!isLoading && userPlaylists.length > 0 && (
         <div className="playlists-grid">
-          {playlists.map((playlist) => (
-            <Link
-              key={playlist.id}
-              to={`/playlists/${playlist.id}`}
-              className="playlist-card"
-            >
+          {userPlaylists.map((playlist) => (
+            <Link key={playlist.id} to={`/playlists/${playlist.id}`} className="playlist-card">
               <div className="playlist-card-image">
                 <PlaylistIcon />
               </div>
               <div className="playlist-card-info">
                 <h3 className="playlist-card-name">{playlist.name}</h3>
                 {playlist.description && (
-                  <p className="playlist-card-description">
-                    {playlist.description}
-                  </p>
+                  <p className="playlist-card-description">{playlist.description}</p>
                 )}
               </div>
             </Link>
@@ -99,7 +84,9 @@ export function PlaylistsPage() {
 
       {showCreateModal && (
         <CreatePlaylistModal
-          onClose={() => setShowCreateModal(false)}
+          onClose={() => {
+            setShowCreateModal(false);
+          }}
           onCreate={handleCreatePlaylist}
         />
       )}
@@ -130,7 +117,12 @@ function CreatePlaylistModal({ onClose, onCreate }: CreatePlaylistModalProps) {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="modal"
+        onClick={(e) => {
+          e.stopPropagation();
+        }}
+      >
         <h2 className="modal-title">Create Playlist</h2>
         <form onSubmit={(e) => void handleSubmit(e)}>
           <div className="form-group">
@@ -139,7 +131,9 @@ function CreatePlaylistModal({ onClose, onCreate }: CreatePlaylistModalProps) {
               id="playlist-name"
               type="text"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                setName(e.target.value);
+              }}
               placeholder="My Playlist"
               autoFocus
             />
@@ -149,7 +143,9 @@ function CreatePlaylistModal({ onClose, onCreate }: CreatePlaylistModalProps) {
             <textarea
               id="playlist-description"
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(e) => {
+                setDescription(e.target.value);
+              }}
               placeholder="Add a description"
               rows={3}
             />
@@ -158,11 +154,7 @@ function CreatePlaylistModal({ onClose, onCreate }: CreatePlaylistModalProps) {
             <button type="button" className="cancel-button" onClick={onClose}>
               Cancel
             </button>
-            <button
-              type="submit"
-              className="submit-button"
-              disabled={!name.trim() || isSubmitting}
-            >
+            <button type="submit" className="submit-button" disabled={!name.trim() || isSubmitting}>
               {isSubmitting ? 'Creating...' : 'Create'}
             </button>
           </div>

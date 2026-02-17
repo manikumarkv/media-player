@@ -1,13 +1,14 @@
 import { MediaRow } from './MediaRow';
-import { type Media } from '../../api/client';
+import type { Media } from '../../api/client';
 import './Library.css';
 
 interface MediaListProps {
   media: Media[];
   showHeader?: boolean;
+  onRemove?: (mediaId: string) => void;
 }
 
-export function MediaList({ media, showHeader = true }: MediaListProps) {
+export function MediaList({ media, showHeader = true, onRemove }: MediaListProps) {
   if (media.length === 0) {
     return null;
   }
@@ -26,7 +27,7 @@ export function MediaList({ media, showHeader = true }: MediaListProps) {
       )}
       <div className="media-list-body">
         {media.map((item, index) => (
-          <MediaRow key={item.id} media={item} index={index} />
+          <MediaRow key={item.id} media={item} index={index} onRemove={onRemove} />
         ))}
       </div>
     </div>

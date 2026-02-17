@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { ToastProvider } from './components/Common';
+import { AddToPlaylistModal } from './components/Playlist';
 import { HomePage } from './pages/HomePage';
 import { LibraryPage } from './pages/LibraryPage';
 import { LikedSongsPage } from './pages/LikedSongsPage';
@@ -25,6 +26,7 @@ export function App() {
             <Route path="/download" element={<DownloadPage />} />
           </Routes>
         </Layout>
+        <AddToPlaylistModal />
       </BrowserRouter>
     </ToastProvider>
   );
