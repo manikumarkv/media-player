@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAudioPlayer, usePlayerKeyboardShortcuts } from '../../hooks/useAudioPlayer';
+import { usePlayTracking } from '../../hooks/usePlayTracking';
 import { NowPlaying } from './NowPlaying';
 import { PlayerControls } from './PlayerControls';
 import { ProgressBar } from './ProgressBar';
@@ -10,9 +11,10 @@ import './Player.css';
 export function Player() {
   const [isQueueOpen, setIsQueueOpen] = useState(false);
 
-  // Initialize audio player and keyboard shortcuts
+  // Initialize audio player, keyboard shortcuts, and play tracking
   useAudioPlayer();
   usePlayerKeyboardShortcuts();
+  usePlayTracking();
 
   return (
     <>
@@ -28,7 +30,9 @@ export function Player() {
           <VolumeControl />
           <button
             className={`queue-toggle ${isQueueOpen ? 'active' : ''}`}
-            onClick={() => setIsQueueOpen(!isQueueOpen)}
+            onClick={() => {
+              setIsQueueOpen(!isQueueOpen);
+            }}
             aria-label={isQueueOpen ? 'Close queue' : 'Open queue'}
             aria-expanded={isQueueOpen}
             title="Queue"
@@ -38,7 +42,12 @@ export function Player() {
         </div>
       </footer>
 
-      <QueuePanel isOpen={isQueueOpen} onClose={() => setIsQueueOpen(false)} />
+      <QueuePanel
+        isOpen={isQueueOpen}
+        onClose={() => {
+          setIsQueueOpen(false);
+        }}
+      />
     </>
   );
 }

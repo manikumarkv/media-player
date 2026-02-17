@@ -21,3 +21,4 @@ export {
   type MenuItem,
 } from './ContextMenu';
 export { ToastProvider, useToast } from './Toast';
+export { OfflineIndicator } from './OfflineIndicator';

@@ -55,6 +55,9 @@ export {
   Clock as HistoryIcon,
 } from 'lucide-react';
 
+// Network Status
+export { WifiOff as WifiOffIcon, Wifi as WifiIcon } from 'lucide-react';
+
 // Toast Notifications
 export {
   CheckCircle as SuccessIcon,

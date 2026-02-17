@@ -1,6 +1,7 @@
-import { type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { Sidebar } from './Sidebar';
 import { Player } from '../Player';
+import { OfflineIndicator } from '../Common';
 import './Layout.css';
 
 interface LayoutProps {
@@ -12,6 +13,7 @@ export function Layout({ children }: LayoutProps) {
     <div className="app-layout">
       <Sidebar />
       <main className="main-content" role="main">
+        <OfflineIndicator />
         {children}
       </main>
       <Player />
