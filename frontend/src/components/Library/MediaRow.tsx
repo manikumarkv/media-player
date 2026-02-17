@@ -1,22 +1,49 @@
+import { useState, useRef, useEffect } from 'react';
 import { usePlayerStore, type Track } from '../../stores/playerStore';
 import { useLibraryStore } from '../../stores/libraryStore';
+import { usePlaylistStore } from '../../stores/playlistStore';
 import { ENDPOINTS } from '@media-player/shared';
-import { type Media } from '../../api/client';
+import type { Media } from '../../api/client';
+import {
+  PlayIcon,
+  MusicNoteIcon,
+  HeartIcon,
+  MoreIcon,
+  QueueIcon,
+  PlaylistAddIcon,
+  RemoveIcon,
+} from '../Icons';
 import './Library.css';
 
 interface MediaRowProps {
   media: Media;
   index?: number;
+  onRemove?: (mediaId: string) => void;
 }
 
-export function MediaRow({ media, index }: MediaRowProps) {
+export function MediaRow({ media, index, onRemove }: MediaRowProps) {
   const { currentTrack, isPlaying, setCurrentTrack, play, addToQueue } = usePlayerStore();
   const { toggleLike } = useLibraryStore();
+  const { openAddToPlaylistModal } = usePlaylistStore();
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const isCurrentTrack = currentTrack?.id === media.id;
-  const thumbnailUrl = media.thumbnailPath
-    ? ENDPOINTS.media.thumbnail(media.id)
-    : null;
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+    if (showMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showMenu]);
+  const thumbnailUrl = media.thumbnailPath ? ENDPOINTS.media.thumbnail(media.id) : null;
 
   const handlePlay = () => {
     const track: Track = {
@@ -51,6 +78,23 @@ export function MediaRow({ media, index }: MediaRowProps) {
     void toggleLike(media.id);
   };
 
+  const handleMenuToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowMenu(!showMenu);
+  };
+
+  const handleAddToPlaylist = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowMenu(false);
+    openAddToPlaylistModal(media.id);
+  };
+
+  const handleRemove = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowMenu(false);
+    onRemove?.(media.id);
+  };
+
   return (
     <div
       className={`media-row ${isCurrentTrack ? 'playing' : ''}`}
@@ -66,13 +110,15 @@ export function MediaRow({ media, index }: MediaRowProps) {
       <div className="media-row-index">
         {isCurrentTrack && isPlaying ? (
           <div className="playing-indicator">
-            <span /><span /><span />
+            <span />
+            <span />
+            <span />
           </div>
         ) : (
           <span className="index-number">{index !== undefined ? index + 1 : ''}</span>
         )}
         <button className="play-icon" aria-label={`Play ${media.title}`}>
-          <PlayIcon />
+          <PlayIcon size={16} />
         </button>
       </div>
 
@@ -81,23 +127,17 @@ export function MediaRow({ media, index }: MediaRowProps) {
           <img src={thumbnailUrl} alt="" loading="lazy" />
         ) : (
           <div className="thumbnail-placeholder small">
-            <MusicNoteIcon />
+            <MusicNoteIcon size={16} />
           </div>
         )}
       </div>
 
       <div className="media-row-info">
-        <span className={`media-row-title ${isCurrentTrack ? 'active' : ''}`}>
-          {media.title}
-        </span>
-        <span className="media-row-artist">
-          {media.artist ?? 'Unknown Artist'}
-        </span>
+        <span className={`media-row-title ${isCurrentTrack ? 'active' : ''}`}>{media.title}</span>
+        <span className="media-row-artist">{media.artist ?? 'Unknown Artist'}</span>
       </div>
 
-      <div className="media-row-album">
-        {media.album ?? ''}
-      </div>
+      <div className="media-row-album">{media.album ?? ''}</div>
 
       <div className="media-row-actions">
         <button
@@ -105,21 +145,39 @@ export function MediaRow({ media, index }: MediaRowProps) {
           onClick={handleLike}
           aria-label={media.isLiked ? 'Unlike' : 'Like'}
         >
-          <HeartIcon filled={media.isLiked} />
+          <HeartIcon size={16} fill={media.isLiked ? 'currentColor' : 'none'} />
         </button>
       </div>
 
-      <div className="media-row-duration">
-        {formatDuration(media.duration)}
-      </div>
+      <div className="media-row-duration">{formatDuration(media.duration)}</div>
 
-      <button
-        className="action-button add-queue-button"
-        onClick={handleAddToQueue}
-        aria-label="Add to queue"
-      >
-        <MoreIcon />
-      </button>
+      <div className="media-row-menu" ref={menuRef}>
+        <button
+          className="action-button menu-button"
+          onClick={handleMenuToggle}
+          aria-label="More options"
+        >
+          <MoreIcon size={16} />
+        </button>
+        {showMenu && (
+          <div className="dropdown-menu">
+            <button className="dropdown-item" onClick={handleAddToQueue}>
+              <QueueIcon size={16} />
+              <span>Add to Queue</span>
+            </button>
+            <button className="dropdown-item" onClick={handleAddToPlaylist}>
+              <PlaylistAddIcon size={16} />
+              <span>Add to Playlist</span>
+            </button>
+            {onRemove && (
+              <button className="dropdown-item remove-item" onClick={handleRemove}>
+                <RemoveIcon size={16} />
+                <span>Remove from Playlist</span>
+              </button>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -127,44 +185,5 @@ export function MediaRow({ media, index }: MediaRowProps) {
 function formatDuration(seconds: number): string {
   const mins = Math.floor(seconds / 60);
   const secs = Math.floor(seconds % 60);
-  return `${mins}:${secs.toString().padStart(2, '0')}`;
-}
-
-function PlayIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
-      <path d="M8 5v14l11-7z" />
-    </svg>
-  );
-}
-
-function MusicNoteIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
-      <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
-    </svg>
-  );
-}
-
-function HeartIcon({ filled }: { filled: boolean }) {
-  if (filled) {
-    return (
-      <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
-        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-      </svg>
-    );
-  }
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
-      <path d="M16.5 3c-1.74 0-3.41.81-4.5 2.09C10.91 3.81 9.24 3 7.5 3 4.42 3 2 5.42 2 8.5c0 3.78 3.4 6.86 8.55 11.54L12 21.35l1.45-1.32C18.6 15.36 22 12.28 22 8.5 22 5.42 19.58 3 16.5 3zm-4.4 15.55l-.1.1-.1-.1C7.14 14.24 4 11.39 4 8.5 4 6.5 5.5 5 7.5 5c1.54 0 3.04.99 3.57 2.36h1.87C13.46 5.99 14.96 5 16.5 5c2 0 3.5 1.5 3.5 3.5 0 2.89-3.14 5.74-7.9 10.05z" />
-    </svg>
-  );
-}
-
-function MoreIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
-      <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
-    </svg>
-  );
+  return `${mins.toString()}:${secs.toString().padStart(2, '0')}`;
 }

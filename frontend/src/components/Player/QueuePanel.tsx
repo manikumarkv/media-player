@@ -1,5 +1,6 @@
 import { usePlayerStore, type Track } from '../../stores/playerStore';
 import { ENDPOINTS } from '@media-player/shared';
+import { CloseIcon, MusicNoteIcon } from '../Icons';
 import './Player.css';
 
 interface QueuePanelProps {
@@ -16,25 +17,22 @@ export function QueuePanel({ isOpen, onClose }: QueuePanelProps) {
 
   return (
     <div className="queue-panel-overlay" onClick={onClose}>
-      <div className="queue-panel" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="queue-panel"
+        onClick={(e) => {
+          e.stopPropagation();
+        }}
+      >
         <div className="queue-header">
           <h3>Queue</h3>
           <div className="queue-actions">
             {queue.length > 0 && (
-              <button
-                className="clear-queue-button"
-                onClick={clearQueue}
-                aria-label="Clear queue"
-              >
+              <button className="clear-queue-button" onClick={clearQueue} aria-label="Clear queue">
                 Clear
               </button>
             )}
-            <button
-              className="close-button"
-              onClick={onClose}
-              aria-label="Close queue"
-            >
-              <CloseIcon />
+            <button className="close-button" onClick={onClose} aria-label="Close queue">
+              <CloseIcon size={20} />
             </button>
           </div>
         </div>
@@ -52,11 +50,13 @@ export function QueuePanel({ isOpen, onClose }: QueuePanelProps) {
               <h4>Up Next</h4>
               <ul className="queue-list" role="list">
                 {queue.map((track, index) => (
-                  <li key={`${track.id}-${index}`}>
+                  <li key={`${track.id}-${index.toString()}`}>
                     <QueueItem
                       track={track}
                       isCurrent={index === queueIndex}
-                      onRemove={() => removeFromQueue(index)}
+                      onRemove={() => {
+                        removeFromQueue(index);
+                      }}
                     />
                   </li>
                 ))}
@@ -90,9 +90,7 @@ function QueueItem({ track, isCurrent, onRemove }: QueueItemProps) {
     play();
   };
 
-  const thumbnailUrl = track.thumbnailPath
-    ? ENDPOINTS.media.thumbnail(track.id)
-    : null;
+  const thumbnailUrl = track.thumbnailPath ? ENDPOINTS.media.thumbnail(track.id) : null;
 
   return (
     <div
@@ -111,7 +109,7 @@ function QueueItem({ track, isCurrent, onRemove }: QueueItemProps) {
           <img src={thumbnailUrl} alt="" />
         ) : (
           <div className="thumbnail-placeholder small">
-            <MusicNoteIcon />
+            <MusicNoteIcon size={16} />
           </div>
         )}
       </div>
@@ -129,7 +127,7 @@ function QueueItem({ track, isCurrent, onRemove }: QueueItemProps) {
           }}
           aria-label={`Remove ${track.title} from queue`}
         >
-          <CloseIcon />
+          <CloseIcon size={16} />
         </button>
       )}
     </div>
@@ -139,21 +137,5 @@ function QueueItem({ track, isCurrent, onRemove }: QueueItemProps) {
 function formatDuration(seconds: number): string {
   const mins = Math.floor(seconds / 60);
   const secs = Math.floor(seconds % 60);
-  return `${mins}:${secs.toString().padStart(2, '0')}`;
-}
-
-function CloseIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
-      <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
-    </svg>
-  );
-}
-
-function MusicNoteIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
-      <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
-    </svg>
-  );
+  return `${mins.toString()}:${secs.toString().padStart(2, '0')}`;
 }

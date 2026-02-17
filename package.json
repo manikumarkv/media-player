@@ -40,8 +40,12 @@
     "typescript": "^5.4.5"
   },
   "lint-staged": {
-    "*.{ts,tsx}": [
-      "eslint --fix",
+    "frontend/**/*.{ts,tsx}": [
+      "pnpm --filter @media-player/frontend exec eslint --fix",
+      "prettier --write"
+    ],
+    "backend/**/*.{ts,tsx}": [
+      "pnpm --filter @media-player/backend exec eslint --fix",
       "prettier --write"
     ],
     "*.{json,md,yml,yaml}": [
