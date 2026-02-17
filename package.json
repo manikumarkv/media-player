@@ -1,0 +1,55 @@
+{
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@prisma/client",
+      "@prisma/engines",
+      "prisma",
+      "esbuild"
+    ],
+    "allowedDeprecatedVersions": {}
+  },
+  "name": "media-player",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "prepare": "husky",
+    "dev": "docker-compose up",
+    "build": "docker-compose build",
+    "install:all": "pnpm install",
+    "backend:dev": "pnpm --filter @media-player/backend dev",
+    "frontend:dev": "pnpm --filter @media-player/frontend dev",
+    "shared:build": "pnpm --filter @media-player/shared build",
+    "db:generate": "pnpm --filter @media-player/backend db:generate",
+    "db:migrate": "pnpm --filter @media-player/backend db:migrate",
+    "db:push": "pnpm --filter @media-player/backend db:push",
+    "lint": "pnpm -r lint",
+    "lint:fix": "pnpm -r lint:fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "pnpm -r test",
+    "test:coverage": "pnpm -r test:coverage",
+    "type-check": "pnpm -r type-check"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.3.0",
+    "@commitlint/config-conventional": "^19.2.2",
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.5",
+    "prettier": "^3.3.1",
+    "typescript": "^5.4.5"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ]
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  }
+}

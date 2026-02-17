@@ -1,0 +1,11 @@
+meta {
+  name: Clear Playlist
+  type: http
+  seq: 10
+}
+
+delete {
+  url: {{baseUrl}}/playlists/{{playlistId}}/clear
+  body: none
+  auth: none
+}

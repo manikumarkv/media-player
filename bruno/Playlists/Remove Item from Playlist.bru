@@ -1,0 +1,11 @@
+meta {
+  name: Remove Item from Playlist
+  type: http
+  seq: 7
+}
+
+delete {
+  url: {{baseUrl}}/playlists/{{playlistId}}/items/{{mediaId}}
+  body: none
+  auth: none
+}

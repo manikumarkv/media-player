@@ -1,0 +1,83 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+    Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  background-color: #121212;
+  color: #ffffff;
+  line-height: 1.6;
+}
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  background: linear-gradient(135deg, #1db954 0%, #191414 100%);
+  padding: 2rem;
+  text-align: center;
+}
+
+.app-header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.app-header p {
+  color: #b3b3b3;
+  font-size: 1.1rem;
+}
+
+.app-main {
+  flex: 1;
+  padding: 2rem;
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.status-section,
+.features-section {
+  background: #282828;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.status-section h2,
+.features-section h2 {
+  margin-bottom: 1rem;
+  color: #1db954;
+}
+
+.status-ok {
+  color: #1db954;
+}
+
+.status-error {
+  color: #f44336;
+}
+
+.features-section ul {
+  list-style: none;
+}
+
+.features-section li {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #404040;
+}
+
+.features-section li:last-child {
+  border-bottom: none;
+}
+
+.features-section li::before {
+  content: '▸ ';
+  color: #1db954;
+}

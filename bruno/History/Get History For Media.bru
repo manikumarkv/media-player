@@ -1,0 +1,16 @@
+meta {
+  name: Get History For Media
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/history/media/{{mediaId}}
+  body: none
+  auth: none
+}
+
+params:query {
+  ~page: 1
+  ~limit: 20
+}

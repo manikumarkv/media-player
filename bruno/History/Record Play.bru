@@ -1,0 +1,18 @@
+meta {
+  name: Record Play
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/history
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "mediaId": "{{mediaId}}",
+    "duration": 180
+  }
+}

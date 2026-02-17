@@ -1,0 +1,17 @@
+meta {
+  name: Add Multiple to Queue
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/queue/add-multiple
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "mediaIds": ["mediaId1", "mediaId2"]
+  }
+}

@@ -1,0 +1,17 @@
+meta {
+  name: Start Download
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/downloads/start
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+  }
+}

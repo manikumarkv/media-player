@@ -1,0 +1,17 @@
+meta {
+  name: Get Video Info
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/downloads/info
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+  }
+}

@@ -1,0 +1,19 @@
+meta {
+  name: List Liked
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/likes
+  body: none
+  auth: none
+}
+
+params:query {
+  ~page: 1
+  ~limit: 20
+  ~query:
+  ~sortBy: createdAt
+  ~sortOrder: desc
+}

@@ -1,0 +1,16 @@
+meta {
+  name: List Playlists
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/playlists
+  body: none
+  auth: none
+}
+
+params:query {
+  ~page: 1
+  ~limit: 20
+}

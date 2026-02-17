@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "Media Player API",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

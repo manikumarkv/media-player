@@ -1,0 +1,17 @@
+meta {
+  name: Add Item to Playlist
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/playlists/{{playlistId}}/items
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "mediaId": "{{mediaId}}"
+  }
+}

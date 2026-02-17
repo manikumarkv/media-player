@@ -1,0 +1,15 @@
+meta {
+  name: Get Recent History
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/history/recent
+  body: none
+  auth: none
+}
+
+params:query {
+  ~limit: 10
+}

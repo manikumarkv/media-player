@@ -1,0 +1,11 @@
+meta {
+  name: Cancel Download
+  type: http
+  seq: 6
+}
+
+delete {
+  url: {{baseUrl}}/downloads/{{downloadId}}
+  body: none
+  auth: none
+}

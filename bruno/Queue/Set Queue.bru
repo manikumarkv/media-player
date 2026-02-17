@@ -1,0 +1,17 @@
+meta {
+  name: Set Queue
+  type: http
+  seq: 10
+}
+
+put {
+  url: {{baseUrl}}/queue
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "mediaIds": ["mediaId1", "mediaId2", "mediaId3"]
+  }
+}

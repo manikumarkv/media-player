@@ -1,0 +1,112 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Media {
+  id           String   @id @default(cuid())
+  title        String
+  artist       String?
+  album        String?
+  duration     Int      // Duration in seconds
+  filePath     String   @unique
+  thumbnailPath String?
+  sourceUrl    String?  // Original YouTube URL
+  sourceId     String?  // YouTube video ID
+  mimeType     String   @default("audio/mpeg")
+  fileSize     Int      @default(0)
+  isLiked      Boolean  @default(false)
+  playCount    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  playlistItems PlaylistItem[]
+  playHistory   PlayHistory[]
+  queueItems    QueueItem[]
+
+  @@index([title])
+  @@index([artist])
+  @@index([isLiked])
+  @@index([createdAt])
+}
+
+model Playlist {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  coverPath   String?
+  isSystem    Boolean  @default(false) // For "Liked Songs" system playlist
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  items PlaylistItem[]
+
+  @@index([name])
+  @@index([isSystem])
+}
+
+model PlaylistItem {
+  id         String   @id @default(cuid())
+  playlistId String
+  mediaId    String
+  position   Int      // Order within playlist
+  addedAt    DateTime @default(now())
+
+  playlist Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  media    Media    @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+
+  @@unique([playlistId, mediaId])
+  @@index([playlistId, position])
+}
+
+model PlayHistory {
+  id        String   @id @default(cuid())
+  mediaId   String
+  playedAt  DateTime @default(now())
+  duration  Int      @default(0) // How long was it played in seconds
+
+  media Media @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+
+  @@index([playedAt])
+  @@index([mediaId])
+}
+
+model QueueItem {
+  id        String   @id @default(cuid())
+  mediaId   String
+  position  Int
+  addedAt   DateTime @default(now())
+
+  media Media @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+
+  @@unique([position])
+  @@index([position])
+}
+
+model Download {
+  id          String   @id @default(cuid())
+  url         String
+  title       String?
+  status      DownloadStatus @default(PENDING)
+  progress    Int      @default(0)
+  error       String?
+  mediaId     String?  // Set after successful download
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+enum DownloadStatus {
+  PENDING
+  DOWNLOADING
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+}

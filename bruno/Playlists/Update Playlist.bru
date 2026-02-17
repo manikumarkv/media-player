@@ -1,0 +1,18 @@
+meta {
+  name: Update Playlist
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/playlists/{{playlistId}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "Updated Playlist Name",
+    "description": "Updated description"
+  }
+}

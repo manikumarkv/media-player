@@ -1,0 +1,18 @@
+meta {
+  name: Create Playlist
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/playlists
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "My Playlist",
+    "description": "A new playlist"
+  }
+}

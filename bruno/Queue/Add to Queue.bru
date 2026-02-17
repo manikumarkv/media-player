@@ -1,0 +1,18 @@
+meta {
+  name: Add to Queue
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/queue/add
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "mediaId": "{{mediaId}}",
+    "position": null
+  }
+}

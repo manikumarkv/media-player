@@ -1,0 +1,11 @@
+meta {
+  name: Remove from Queue
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{baseUrl}}/queue/{{mediaId}}
+  body: none
+  auth: none
+}

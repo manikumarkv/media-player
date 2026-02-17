@@ -1,0 +1,17 @@
+meta {
+  name: Reorder Playlist
+  type: http
+  seq: 8
+}
+
+put {
+  url: {{baseUrl}}/playlists/{{playlistId}}/reorder
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "mediaIds": ["mediaId1", "mediaId2", "mediaId3"]
+  }
+}

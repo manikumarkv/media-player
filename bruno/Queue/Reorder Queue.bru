@@ -1,0 +1,17 @@
+meta {
+  name: Reorder Queue
+  type: http
+  seq: 7
+}
+
+put {
+  url: {{baseUrl}}/queue/reorder
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "mediaIds": ["mediaId1", "mediaId2", "mediaId3"]
+  }
+}

@@ -1,9 +1,46 @@
+# Dependencies
 node_modules/
+.pnpm-store/
+
+# Build outputs
 dist/
 build/
-downloads/
-*.log
-.env
-.DS_Store
-coverage/
 *.tsbuildinfo
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Testing
+coverage/
+.nyc_output/
+
+# Docker
+.docker/
+
+# Media files (large)
+media/
+*.mp3
+*.mp4
+*.webm
+*.m4a
+
+# Prisma
+prisma/migrations/.migration_lock.toml
+
+# OS files
+Thumbs.db
