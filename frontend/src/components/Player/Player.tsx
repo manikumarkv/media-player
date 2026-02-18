@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { useAudioPlayer, usePlayerKeyboardShortcuts } from '../../hooks/useAudioPlayer';
+import { useState, useEffect } from 'react';
+import { useAudioPlayer } from '../../hooks/useAudioPlayer';
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 import { usePlayTracking } from '../../hooks/usePlayTracking';
 import { usePlayerStore } from '../../stores/playerStore';
 import { NowPlaying } from './NowPlaying';
@@ -13,10 +14,25 @@ export function Player() {
   const [isQueueOpen, setIsQueueOpen] = useState(false);
   const currentTrack = usePlayerStore((state) => state.currentTrack);
 
-  // Initialize audio player, keyboard shortcuts, and play tracking
-  useAudioPlayer();
-  usePlayerKeyboardShortcuts();
+  // Initialize audio player and play tracking
+  const { seek } = useAudioPlayer();
   usePlayTracking();
+
+  // Initialize keyboard shortcuts
+  useKeyboardShortcuts();
+
+  // Listen for seek events from keyboard shortcuts
+  useEffect(() => {
+    const handleSeek = (event: Event) => {
+      const customEvent = event as CustomEvent<{ time: number }>;
+      seek(customEvent.detail.time);
+    };
+
+    window.addEventListener('player:seek', handleSeek);
+    return () => {
+      window.removeEventListener('player:seek', handleSeek);
+    };
+  }, [seek]);
 
   // Hide player when nothing is selected
   if (!currentTrack) {

@@ -1,4 +1,5 @@
 import { YouTubeSyncSettings } from '../components/Settings/YouTubeSync/YouTubeSyncSettings';
+import { KeyboardShortcutsSettings } from '../components/Settings/KeyboardShortcuts';
 import './Pages.css';
 
 export function SettingsPage() {
@@ -10,6 +11,12 @@ export function SettingsPage() {
       </header>
 
       <div className="settings-sections">
+        <section className="settings-section">
+          <h2 className="section-title">Keyboard Shortcuts</h2>
+          <p className="section-description">Customize keyboard shortcuts for player controls</p>
+          <KeyboardShortcutsSettings />
+        </section>
+
         <section className="settings-section">
           <h2 className="section-title">YouTube Sync</h2>
           <p className="section-description">

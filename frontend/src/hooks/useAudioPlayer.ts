@@ -61,14 +61,8 @@ function fadeVolume(
 
 export function useAudioPlayer() {
   const isInitialized = useRef(false);
-  const {
-    currentTrack,
-    isPlaying,
-    volume,
-    isMuted,
-    setCurrentTime,
-    setDuration,
-  } = usePlayerStore();
+  const { currentTrack, isPlaying, volume, isMuted, setCurrentTime, setDuration } =
+    usePlayerStore();
 
   // Initialize audio element and event listeners (only once per app)
   useEffect(() => {
@@ -110,24 +104,22 @@ export function useAudioPlayer() {
     // No cleanup - singleton persists for app lifetime
   }, [setCurrentTime, setDuration]);
 
-  // Handle track changes
+  // Handle track changes (only when track changes, not when isPlaying changes)
   useEffect(() => {
     const audio = getAudioElement();
 
     if (currentTrack) {
       const streamUrl = ENDPOINTS.media.stream(currentTrack.id);
-      if (audio.src !== streamUrl) {
+      // Compare using endsWith since audio.src is absolute and streamUrl is relative
+      if (!audio.src.endsWith(streamUrl)) {
         audio.src = streamUrl;
         audio.load();
-      }
-      if (isPlaying) {
-        void audio.play().catch(console.error);
       }
     } else {
       audio.pause();
       audio.src = '';
     }
-  }, [currentTrack, isPlaying]);
+  }, [currentTrack]);
 
   // Handle play/pause
   useEffect(() => {
@@ -179,12 +171,14 @@ export function useAudioPlayer() {
     isFading = true;
 
     // Fade out -> seek -> fade in
-    void fadeVolume(audio, 0, FADE_DURATION).then(() => {
-      audio.currentTime = targetTime;
-      return fadeVolume(audio, currentVolume, FADE_DURATION);
-    }).then(() => {
-      isFading = false;
-    });
+    void fadeVolume(audio, 0, FADE_DURATION)
+      .then(() => {
+        audio.currentTime = targetTime;
+        return fadeVolume(audio, currentVolume, FADE_DURATION);
+      })
+      .then(() => {
+        isFading = false;
+      });
   }, []);
 
   // Play a track
@@ -204,69 +198,4 @@ export function useAudioPlayer() {
     seek,
     playTrack,
   };
-}
-
-// Keyboard shortcuts hook
-export function usePlayerKeyboardShortcuts() {
-  const { togglePlay, playNext, playPrevious, toggleMute } = usePlayerStore();
-  const { seek } = useAudioPlayer();
-  const currentTime = usePlayerStore((state) => state.currentTime);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignore if typing in input
-      if (
-        e.target instanceof HTMLInputElement ||
-        e.target instanceof HTMLTextAreaElement
-      ) {
-        return;
-      }
-
-      switch (e.code) {
-        case 'Space':
-          e.preventDefault();
-          togglePlay();
-          break;
-        case 'ArrowRight':
-          e.preventDefault();
-          if (e.shiftKey) {
-            playNext();
-          } else {
-            seek(currentTime + 10);
-          }
-          break;
-        case 'ArrowLeft':
-          e.preventDefault();
-          if (e.shiftKey) {
-            playPrevious();
-          } else {
-            seek(currentTime - 10);
-          }
-          break;
-        case 'ArrowUp':
-          e.preventDefault();
-          {
-            const { volume, setVolume } = usePlayerStore.getState();
-            setVolume(Math.min(1, volume + 0.1));
-          }
-          break;
-        case 'ArrowDown':
-          e.preventDefault();
-          {
-            const { volume, setVolume } = usePlayerStore.getState();
-            setVolume(Math.max(0, volume - 0.1));
-          }
-          break;
-        case 'KeyM':
-          e.preventDefault();
-          toggleMute();
-          break;
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [togglePlay, playNext, playPrevious, toggleMute, seek, currentTime]);
 }

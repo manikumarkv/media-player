@@ -25,6 +25,13 @@ export function PlayerControls() {
 
   const disabled = !currentTrack;
 
+  // Prevent Space/Enter from triggering button clicks (handled by keyboard shortcuts)
+  const preventKeyboardClick = (e: React.KeyboardEvent) => {
+    if (e.code === 'Space' || e.code === 'Enter') {
+      e.preventDefault();
+    }
+  };
+
   return (
     <div className="player-controls">
       <button
@@ -40,6 +47,7 @@ export function PlayerControls() {
       <button
         className="control-button"
         onClick={playPrevious}
+        onKeyDown={preventKeyboardClick}
         disabled={disabled}
         aria-label="Previous track"
         title="Previous"
@@ -50,6 +58,7 @@ export function PlayerControls() {
       <button
         className="control-button play-pause"
         onClick={togglePlay}
+        onKeyDown={preventKeyboardClick}
         disabled={disabled}
         aria-label={isPlaying ? 'Pause' : 'Play'}
         title={isPlaying ? 'Pause' : 'Play'}
@@ -60,6 +69,7 @@ export function PlayerControls() {
       <button
         className="control-button"
         onClick={playNext}
+        onKeyDown={preventKeyboardClick}
         disabled={disabled}
         aria-label="Next track"
         title="Next"
