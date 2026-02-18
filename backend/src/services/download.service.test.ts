@@ -134,7 +134,7 @@ describe('downloadService', () => {
     it('should throw error if already downloaded', async () => {
       vi.mocked(youtubeService.isValidUrl).mockReturnValue(true);
       vi.mocked(youtubeService.extractVideoId).mockReturnValue('abc123');
-      vi.mocked(mediaService.findBySourceId).mockResolvedValue({ id: 'm1' });
+      vi.mocked(mediaService.findBySourceId).mockResolvedValue({ id: 'm1' } as never);
 
       await expect(
         downloadService.start('https://youtube.com/watch?v=abc123')

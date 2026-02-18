@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { HomeIcon, LibraryIcon, DownloadIcon, HeartIcon, HistoryIcon, QueueIcon } from '../Icons';
+import { HomeIcon, LibraryIcon, DownloadIcon, HeartIcon, HistoryIcon, QueueIcon, SettingsIcon } from '../Icons';
 import './Layout.css';
 
 export function Sidebar() {
@@ -67,6 +67,22 @@ export function Sidebar() {
             >
               <QueueIcon size={24} />
               <span>Playlists</span>
+            </NavLink>
+          </li>
+        </ul>
+      </nav>
+
+      <div className="sidebar-divider" />
+
+      <nav className="sidebar-nav settings">
+        <ul className="nav-list">
+          <li>
+            <NavLink
+              to="/settings"
+              className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+            >
+              <SettingsIcon size={24} />
+              <span>Settings</span>
             </NavLink>
           </li>
         </ul>

@@ -1,6 +1,12 @@
 import { type Server as HttpServer } from 'http';
 import { Server, type Socket } from 'socket.io';
-import { SOCKET_EVENTS, type DownloadProgressPayload } from '@media-player/shared';
+import {
+  SOCKET_EVENTS,
+  type DownloadProgressPayload,
+  type YouTubeSyncProgressPayload,
+  type YouTubeSyncCompletedPayload,
+  type YouTubeSyncErrorPayload,
+} from '@media-player/shared';
 import { config } from '../config/database.js';
 
 let io: Server | null = null;
@@ -68,5 +74,22 @@ export const socketService = {
 
   emitPlaylistUpdated(playlistId: string): void {
     io?.emit(SOCKET_EVENTS.LIBRARY.PLAYLIST_UPDATED, { playlistId });
+  },
+
+  // YouTube Sync events
+  emitYouTubeSyncStarted(): void {
+    io?.emit(SOCKET_EVENTS.YOUTUBE_SYNC.STARTED, {});
+  },
+
+  emitYouTubeSyncProgress(data: YouTubeSyncProgressPayload): void {
+    io?.emit(SOCKET_EVENTS.YOUTUBE_SYNC.PROGRESS, data);
+  },
+
+  emitYouTubeSyncCompleted(data: YouTubeSyncCompletedPayload): void {
+    io?.emit(SOCKET_EVENTS.YOUTUBE_SYNC.COMPLETED, data);
+  },
+
+  emitYouTubeSyncError(data: YouTubeSyncErrorPayload): void {
+    io?.emit(SOCKET_EVENTS.YOUTUBE_SYNC.ERROR, data);
   },
 };

@@ -5,6 +5,7 @@ import queueRoutes from './queue.routes.js';
 import historyRoutes from './history.routes.js';
 import likesRoutes from './likes.routes.js';
 import downloadRoutes from './download.routes.js';
+import youtubeSyncRoutes from './youtube-sync.routes.js';
 
 export const router: RouterType = Router();
 
@@ -15,3 +16,4 @@ router.use(queueRoutes);
 router.use(historyRoutes);
 router.use(likesRoutes);
 router.use(downloadRoutes);
+router.use(youtubeSyncRoutes);

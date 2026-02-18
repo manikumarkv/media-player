@@ -515,6 +515,71 @@
   color: #ef4444;
 }
 
+/* Delete Button */
+.action-button.delete-button:hover {
+  color: #ef4444;
+}
+
+/* Delete Confirmation Overlay */
+.media-card-delete-confirm {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.9);
+  border-radius: 8px;
+  z-index: 10;
+  padding: 16px;
+  text-align: center;
+}
+
+.media-card-delete-confirm p {
+  color: #fff;
+  font-size: 14px;
+  margin: 0 0 16px;
+}
+
+.delete-confirm-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.delete-confirm-btn {
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.delete-confirm-btn.cancel {
+  background: #3e3e3e;
+  color: #fff;
+  border: none;
+}
+
+.delete-confirm-btn.cancel:hover {
+  background: #505050;
+}
+
+.delete-confirm-btn.confirm {
+  background: #ef4444;
+  color: #fff;
+  border: none;
+}
+
+.delete-confirm-btn.confirm:hover {
+  background: #dc2626;
+}
+
+.delete-confirm-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .media-grid {

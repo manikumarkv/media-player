@@ -16,7 +16,7 @@ const io = socketService.initialize(httpServer);
 // Middleware
 app.use(helmet());
 app.use(cors({ origin: config.frontendUrl }));
-app.use(express.json());
+app.use(express.json({ limit: '5mb' }));
 
 // Health check (no API prefix)
 app.get('/health', (_req, res) => {

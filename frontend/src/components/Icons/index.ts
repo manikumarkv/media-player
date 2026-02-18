@@ -53,6 +53,7 @@ export {
   Library as LibraryIcon,
   Download as DownloadIcon,
   Clock as HistoryIcon,
+  Settings as SettingsIcon,
 } from 'lucide-react';
 
 // Network Status

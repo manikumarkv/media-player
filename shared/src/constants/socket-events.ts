@@ -33,6 +33,15 @@ export const SOCKET_EVENTS = {
     MEDIA_DELETED: 'library:media-deleted',
     PLAYLIST_UPDATED: 'library:playlist-updated',
   },
+
+  // YouTube Sync events
+  YOUTUBE_SYNC: {
+    STARTED: 'youtube-sync:started',
+    PROGRESS: 'youtube-sync:progress',
+    COMPLETED: 'youtube-sync:completed',
+    ERROR: 'youtube-sync:error',
+    AUTH_REQUIRED: 'youtube-sync:auth-required',
+  },
 } as const;
 
 // Type helpers for socket event payloads
@@ -50,5 +59,26 @@ export interface DownloadCompletedPayload {
 
 export interface DownloadErrorPayload {
   downloadId: string;
+  error: string;
+}
+
+// YouTube Sync payload types
+export interface YouTubeSyncProgressPayload {
+  totalVideos: number;
+  processedVideos: number;
+  downloadedVideos: number;
+  skippedVideos: number;
+  failedVideos: number;
+  currentVideo?: string;
+}
+
+export interface YouTubeSyncCompletedPayload {
+  videosFound: number;
+  videosDownloaded: number;
+  videosSkipped: number;
+  videosFailed: number;
+}
+
+export interface YouTubeSyncErrorPayload {
   error: string;
 }

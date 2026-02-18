@@ -219,8 +219,14 @@
   transition: transform 0.1s ease;
 }
 
-.progress-bar:hover .progress-thumb {
+.progress-bar:hover .progress-thumb,
+.progress-bar.dragging .progress-thumb {
   transform: translate(-50%, -50%) scale(1);
+}
+
+.progress-bar.dragging .progress-fill {
+  background: #1db954;
+  transition: none;
 }
 
 /* Player Right */
@@ -293,8 +299,13 @@
   transition: transform 0.1s ease;
 }
 
-.volume-slider:hover .volume-thumb {
+.volume-slider:hover .volume-thumb,
+.volume-slider.dragging .volume-thumb {
   transform: translate(-50%, -50%) scale(1);
+}
+
+.volume-slider.dragging .volume-fill {
+  background: #1db954;
 }
 
 /* Queue Toggle */

@@ -33,12 +33,12 @@ export interface Playlist {
 }
 
 export interface PlaylistWithItems extends Playlist {
-  items: Array<{
+  items: {
     id: string;
     position: number;
     addedAt: string;
     media: Media;
-  }>;
+  }[];
 }
 
 export interface PlayHistory {
@@ -55,6 +55,40 @@ export interface QueueItem {
   position: number;
   addedAt: string;
   media: Media;
+}
+
+export interface YouTubeSyncStatus {
+  isConnected: boolean;
+  authMethod: 'cookie' | null;
+  email: string | null;
+  lastSyncAt: string | null;
+  autoSync: boolean;
+  syncInterval: number;
+  filterMusic: boolean;
+  maxDuration: number;
+}
+
+export interface YouTubeSyncSettings {
+  autoSync: boolean;
+  syncInterval: number;
+  filterMusic: boolean;
+  maxDuration: number;
+}
+
+export interface YouTubeSyncHistory {
+  id: string;
+  syncedAt: string;
+  videosFound: number;
+  videosDownloaded: number;
+  videosFailed: number;
+  videosSkipped: number;
+}
+
+export interface YouTubeSyncResult {
+  videosFound: number;
+  videosDownloaded: number;
+  videosSkipped: number;
+  videosFailed: number;
 }
 
 export interface Pagination {
@@ -159,6 +193,10 @@ class ApiClient {
         totalSize: number;
         likedCount: number;
       }>;
+    },
+
+    delete: async (id: string): Promise<void> => {
+      await this.client.delete(ENDPOINTS.media.delete(id));
     },
   };
 
@@ -320,6 +358,67 @@ class ApiClient {
       const response = await this.client.post<ApiResponse<unknown>>(
         ENDPOINTS.downloads.start(),
         { url }
+      );
+      return response.data;
+    },
+  };
+
+  // YouTube Sync endpoints
+  youtubeSync = {
+    getStatus: async (): Promise<ApiResponse<YouTubeSyncStatus>> => {
+      const response = await this.client.get<ApiResponse<YouTubeSyncStatus>>(
+        ENDPOINTS.youtubeSync.status()
+      );
+      return response.data;
+    },
+
+    getSettings: async (): Promise<ApiResponse<YouTubeSyncSettings>> => {
+      const response = await this.client.get<ApiResponse<YouTubeSyncSettings>>(
+        ENDPOINTS.youtubeSync.settings()
+      );
+      return response.data;
+    },
+
+    updateSettings: async (
+      settings: Partial<YouTubeSyncSettings>
+    ): Promise<ApiResponse<YouTubeSyncSettings>> => {
+      const response = await this.client.patch<ApiResponse<YouTubeSyncSettings>>(
+        ENDPOINTS.youtubeSync.settings(),
+        settings
+      );
+      return response.data;
+    },
+
+    getHistory: async (limit?: number): Promise<ApiResponse<YouTubeSyncHistory[]>> => {
+      const response = await this.client.get<ApiResponse<YouTubeSyncHistory[]>>(
+        ENDPOINTS.youtubeSync.history(),
+        { params: { limit } }
+      );
+      return response.data;
+    },
+
+    authWithCookies: async (
+      cookies: string
+    ): Promise<ApiResponse<{ success: boolean; email?: string }>> => {
+      const response = await this.client.post<ApiResponse<{ success: boolean; email?: string }>>(
+        ENDPOINTS.youtubeSync.auth.cookie(),
+        { cookies }
+      );
+      return response.data;
+    },
+
+    sync: async (): Promise<ApiResponse<YouTubeSyncResult>> => {
+      const response = await this.client.post<ApiResponse<YouTubeSyncResult>>(
+        ENDPOINTS.youtubeSync.sync(),
+        {},
+        { timeout: 600000 } // 10 minutes - sync can take a long time
+      );
+      return response.data;
+    },
+
+    disconnect: async (): Promise<ApiResponse<{ message: string }>> => {
+      const response = await this.client.delete<ApiResponse<{ message: string }>>(
+        ENDPOINTS.youtubeSync.disconnect()
       );
       return response.data;
     },

@@ -1,11 +1,12 @@
+import fs from 'fs';
 import { prisma } from '../config/database.js';
 import { NotFoundError } from '../errors/index.js';
-import {
-  type Media,
-  type CreateMediaInput,
-  type UpdateMediaInput,
-  type MediaSearchParams,
-  type PaginatedResult,
+import type {
+  Media,
+  CreateMediaInput,
+  UpdateMediaInput,
+  MediaSearchParams,
+  PaginatedResult,
 } from '../types/index.js';
 
 const DEFAULT_PAGE = 1;
@@ -121,12 +122,23 @@ export const mediaService = {
   },
 
   async delete(id: string): Promise<void> {
-    // First check if media exists
-    await this.findById(id);
+    // First get the media to access file paths
+    const media = await this.findById(id);
 
+    // Delete from database first
     await prisma.media.delete({
       where: { id },
     });
+
+    // Delete media file from disk
+    if (media.filePath && fs.existsSync(media.filePath)) {
+      fs.unlinkSync(media.filePath);
+    }
+
+    // Delete thumbnail from disk
+    if (media.thumbnailPath && fs.existsSync(media.thumbnailPath)) {
+      fs.unlinkSync(media.thumbnailPath);
+    }
   },
 
   async toggleLike(id: string): Promise<Media> {

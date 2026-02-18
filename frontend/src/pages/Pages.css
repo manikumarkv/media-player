@@ -707,6 +707,24 @@
   color: #b3b3b3;
 }
 
+/* Settings Page */
+.settings-page .settings-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.settings-page .settings-section {
+  background: #1a1a1a;
+  border-radius: 8px;
+  padding: 24px;
+}
+
+.settings-page .section-description {
+  color: #a0a0a0;
+  margin-bottom: 24px;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .liked-header {

@@ -1,4 +1,4 @@
-import { useRef, useCallback, type MouseEvent } from 'react';
+import { useRef, useCallback, useState, useEffect, type MouseEvent } from 'react';
 import { usePlayerStore } from '../../stores/playerStore';
 import { VolumeHighIcon, VolumeLowIcon, VolumeMuteIcon } from '../Icons';
 import './Player.css';
@@ -6,8 +6,52 @@ import './Player.css';
 export function VolumeControl() {
   const { volume, isMuted, setVolume, toggleMute } = usePlayerStore();
   const sliderRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   const displayVolume = isMuted ? 0 : volume;
+
+  const calculateVolume = useCallback((clientX: number) => {
+    if (!sliderRef.current) {
+      return volume;
+    }
+    const rect = sliderRef.current.getBoundingClientRect();
+    const x = clientX - rect.left;
+    return Math.max(0, Math.min(1, x / rect.width));
+  }, [volume]);
+
+  const handleMouseDown = useCallback(
+    (e: MouseEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      setIsDragging(true);
+      const newVolume = calculateVolume(e.clientX);
+      setVolume(newVolume);
+    },
+    [calculateVolume, setVolume]
+  );
+
+  // Handle mouse move and mouse up globally when dragging
+  useEffect(() => {
+    if (!isDragging) {
+      return;
+    }
+
+    const handleMouseMove = (e: globalThis.MouseEvent) => {
+      const newVolume = calculateVolume(e.clientX);
+      setVolume(newVolume);
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, calculateVolume, setVolume]);
 
   const handleClick = useCallback(
     (e: MouseEvent<HTMLDivElement>) => {
@@ -67,8 +111,9 @@ export function VolumeControl() {
       </button>
       <div
         ref={sliderRef}
-        className="volume-slider"
+        className={`volume-slider ${isDragging ? 'dragging' : ''}`}
         onClick={handleClick}
+        onMouseDown={handleMouseDown}
         onKeyDown={handleKeyDown}
         role="slider"
         aria-label="Volume"

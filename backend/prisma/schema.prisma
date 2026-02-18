@@ -110,3 +110,31 @@ enum DownloadStatus {
   FAILED
   CANCELLED
 }
+
+// YouTube Sync Models
+model YouTubeSync {
+  id            String    @id @default(cuid())
+  authMethod    String    // 'browser' | 'cookie' | 'mount'
+  email         String?
+  isConnected   Boolean   @default(false)
+  lastSyncAt    DateTime?
+  autoSync      Boolean   @default(true)
+  syncInterval  Int       @default(60)  // minutes
+  filterMusic   Boolean   @default(true)
+  maxDuration   Int       @default(600) // seconds (10 minutes default)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([isConnected])
+}
+
+model YouTubeSyncHistory {
+  id               String   @id @default(cuid())
+  syncedAt         DateTime @default(now())
+  videosFound      Int      @default(0)
+  videosDownloaded Int      @default(0)
+  videosFailed     Int      @default(0)
+  videosSkipped    Int      @default(0)
+
+  @@index([syncedAt])
+}

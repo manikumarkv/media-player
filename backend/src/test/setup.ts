@@ -1,7 +1,10 @@
 import { vi } from 'vitest';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type MockPrismaType = Record<string, any>;
+
 // Mock Prisma client
-export const mockPrisma = {
+export const mockPrisma: MockPrismaType = {
   media: {
     findMany: vi.fn(),
     findUnique: vi.fn(),
@@ -58,6 +61,19 @@ export const mockPrisma = {
     create: vi.fn(),
     update: vi.fn(),
     delete: vi.fn(),
+    deleteMany: vi.fn(),
+  },
+  youTubeSync: {
+    findFirst: vi.fn(),
+    findUnique: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    upsert: vi.fn(),
+    delete: vi.fn(),
+  },
+  youTubeSyncHistory: {
+    findMany: vi.fn(),
+    create: vi.fn(),
     deleteMany: vi.fn(),
   },
   $transaction: vi.fn((callback) => {

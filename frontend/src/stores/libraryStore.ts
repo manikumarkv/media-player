@@ -37,6 +37,7 @@ interface LibraryState {
   setSortOrder: (sortOrder: SortOrder) => void;
   setViewMode: (viewMode: ViewMode) => void;
   toggleLike: (mediaId: string) => Promise<void>;
+  deleteMedia: (mediaId: string) => Promise<void>;
   reset: () => void;
 }
 
@@ -158,6 +159,23 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
       }));
     } catch (error) {
       console.error('Failed to toggle like:', error);
+    }
+  },
+
+  deleteMedia: async (mediaId: string) => {
+    try {
+      await apiClient.media.delete(mediaId);
+
+      // Remove from all lists
+      set((state) => ({
+        media: state.media.filter((m) => m.id !== mediaId),
+        likedMedia: state.likedMedia.filter((m) => m.id !== mediaId),
+        recentMedia: state.recentMedia.filter((m) => m.id !== mediaId),
+        total: state.total - 1,
+      }));
+    } catch (error) {
+      console.error('Failed to delete media:', error);
+      throw error;
     }
   },
 

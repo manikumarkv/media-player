@@ -205,7 +205,7 @@ describe('mediaService', () => {
       mockPrisma.media.findMany.mockResolvedValue(mockMedia);
       mockPrisma.media.count.mockResolvedValue(1);
 
-      const result = await mediaService.getLiked({});
+      await mediaService.getLiked({});
 
       expect(mockPrisma.media.findMany).toHaveBeenCalledWith(
         expect.objectContaining({

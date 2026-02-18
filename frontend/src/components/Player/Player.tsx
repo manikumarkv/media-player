@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAudioPlayer, usePlayerKeyboardShortcuts } from '../../hooks/useAudioPlayer';
 import { usePlayTracking } from '../../hooks/usePlayTracking';
+import { usePlayerStore } from '../../stores/playerStore';
 import { NowPlaying } from './NowPlaying';
 import { PlayerControls } from './PlayerControls';
 import { ProgressBar } from './ProgressBar';
@@ -10,11 +11,17 @@ import './Player.css';
 
 export function Player() {
   const [isQueueOpen, setIsQueueOpen] = useState(false);
+  const currentTrack = usePlayerStore((state) => state.currentTrack);
 
   // Initialize audio player, keyboard shortcuts, and play tracking
   useAudioPlayer();
   usePlayerKeyboardShortcuts();
   usePlayTracking();
+
+  // Hide player when nothing is selected
+  if (!currentTrack) {
+    return null;
+  }
 
   return (
     <>

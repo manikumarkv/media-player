@@ -1,9 +1,10 @@
+import { useState } from 'react';
 import { usePlayerStore, type Track } from '../../stores/playerStore';
 import { useLibraryStore } from '../../stores/libraryStore';
 import { usePlaylistStore } from '../../stores/playlistStore';
 import { ENDPOINTS } from '@media-player/shared';
 import type { Media } from '../../api/client';
-import { PlayIcon, MusicNoteIcon, HeartIcon, QueueIcon, PlaylistAddIcon } from '../Icons';
+import { PlayIcon, MusicNoteIcon, HeartIcon, QueueIcon, PlaylistAddIcon, DeleteIcon } from '../Icons';
 import './Library.css';
 
 interface MediaCardProps {
@@ -12,9 +13,11 @@ interface MediaCardProps {
 }
 
 export function MediaCard({ media, showArtist = true }: MediaCardProps) {
-  const { setCurrentTrack, play, addToQueue } = usePlayerStore();
-  const { toggleLike } = useLibraryStore();
+  const { setCurrentTrack, play, addToQueue, currentTrack, pause } = usePlayerStore();
+  const { toggleLike, deleteMedia } = useLibraryStore();
   const { openAddToPlaylistModal } = usePlaylistStore();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const thumbnailUrl = media.thumbnailPath ? ENDPOINTS.media.thumbnail(media.id) : null;
 
@@ -54,6 +57,34 @@ export function MediaCard({ media, showArtist = true }: MediaCardProps) {
   const handleAddToPlaylist = (e: React.MouseEvent) => {
     e.stopPropagation();
     openAddToPlaylistModal(media.id);
+  };
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowDeleteConfirm(true);
+  };
+
+  const handleConfirmDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsDeleting(true);
+    try {
+      // Stop playback if this track is currently playing
+      if (currentTrack?.id === media.id) {
+        pause();
+        setCurrentTrack(null);
+      }
+      await deleteMedia(media.id);
+    } catch (error) {
+      console.error('Failed to delete:', error);
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+    }
+  };
+
+  const handleCancelDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowDeleteConfirm(false);
   };
 
   return (
@@ -110,7 +141,37 @@ export function MediaCard({ media, showArtist = true }: MediaCardProps) {
         <button className="action-button" onClick={handleAddToQueue} aria-label="Add to queue">
           <QueueIcon size={18} />
         </button>
+        <button
+          className="action-button delete-button"
+          onClick={handleDelete}
+          aria-label="Delete from library"
+        >
+          <DeleteIcon size={18} />
+        </button>
       </div>
+
+      {/* Delete confirmation overlay */}
+      {showDeleteConfirm && (
+        <div className="media-card-delete-confirm" onClick={(e) => e.stopPropagation()}>
+          <p>Delete this song?</p>
+          <div className="delete-confirm-actions">
+            <button
+              className="delete-confirm-btn cancel"
+              onClick={handleCancelDelete}
+              disabled={isDeleting}
+            >
+              Cancel
+            </button>
+            <button
+              className="delete-confirm-btn confirm"
+              onClick={handleConfirmDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </button>
+          </div>
+        </div>
+      )}
     </article>
   );
 }

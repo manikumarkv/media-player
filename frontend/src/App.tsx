@@ -9,6 +9,7 @@ import { HistoryPage } from './pages/HistoryPage';
 import { PlaylistsPage } from './pages/PlaylistsPage';
 import { PlaylistDetailPage } from './pages/PlaylistDetailPage';
 import { DownloadPage } from './pages/DownloadPage';
+import { SettingsPage } from './pages/SettingsPage';
 import './styles/global.css';
 
 export function App() {
@@ -24,6 +25,7 @@ export function App() {
             <Route path="/playlists" element={<PlaylistsPage />} />
             <Route path="/playlists/:id" element={<PlaylistDetailPage />} />
             <Route path="/download" element={<DownloadPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
           </Routes>
         </Layout>
         <AddToPlaylistModal />

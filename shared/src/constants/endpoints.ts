@@ -72,4 +72,19 @@ export const ENDPOINTS = {
     info: (url: string) =>
       `${endpoint(ROUTES.DOWNLOADS.INFO)}?url=${encodeURIComponent(url)}`,
   },
+
+  // YouTube Sync
+  youtubeSync: {
+    status: () => endpoint(ROUTES.YOUTUBE_SYNC.STATUS),
+    settings: () => endpoint(ROUTES.YOUTUBE_SYNC.SETTINGS),
+    history: () => endpoint(ROUTES.YOUTUBE_SYNC.HISTORY),
+    auth: {
+      browser: () => endpoint(ROUTES.YOUTUBE_SYNC.AUTH.BROWSER),
+      browserStatus: () => endpoint(ROUTES.YOUTUBE_SYNC.AUTH.BROWSER_STATUS),
+      cookie: () => endpoint(ROUTES.YOUTUBE_SYNC.AUTH.COOKIE),
+      mountVerify: () => endpoint(ROUTES.YOUTUBE_SYNC.AUTH.MOUNT_VERIFY),
+    },
+    sync: () => endpoint(ROUTES.YOUTUBE_SYNC.SYNC),
+    disconnect: () => endpoint(ROUTES.YOUTUBE_SYNC.DISCONNECT),
+  },
 } as const;

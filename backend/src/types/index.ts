@@ -6,10 +6,22 @@ import {
   type QueueItem,
   type Download,
   type DownloadStatus,
+  type YouTubeSync,
+  type YouTubeSyncHistory,
 } from '@prisma/client';
 
 // Re-export Prisma types
-export type { Media, Playlist, PlaylistItem, PlayHistory, QueueItem, Download, DownloadStatus };
+export type {
+  Media,
+  Playlist,
+  PlaylistItem,
+  PlayHistory,
+  QueueItem,
+  Download,
+  DownloadStatus,
+  YouTubeSync,
+  YouTubeSyncHistory,
+};
 
 // Pagination
 export interface PaginationParams {
@@ -128,4 +140,53 @@ export interface ApiResponse<T = unknown> {
 
 export interface ApiListResponse<T> extends ApiResponse<T[]> {
   pagination?: PaginatedResult<T>['pagination'];
+}
+
+// YouTube Sync types
+export type YouTubeSyncAuthMethod = 'browser' | 'cookie' | 'mount';
+
+export interface YouTubeSyncStatus {
+  isConnected: boolean;
+  authMethod: YouTubeSyncAuthMethod | null;
+  email: string | null;
+  lastSyncAt: Date | null;
+  autoSync: boolean;
+  syncInterval: number;
+  filterMusic: boolean;
+  maxDuration: number;
+}
+
+export interface YouTubeSyncSettings {
+  autoSync: boolean;
+  syncInterval: number;
+  filterMusic: boolean;
+  maxDuration: number;
+}
+
+export interface UpdateYouTubeSyncSettingsInput {
+  autoSync?: boolean;
+  syncInterval?: number;
+  filterMusic?: boolean;
+  maxDuration?: number;
+}
+
+export interface YouTubeSyncResult {
+  videosFound: number;
+  videosDownloaded: number;
+  videosSkipped: number;
+  videosFailed: number;
+}
+
+export interface YouTubeLikedVideo {
+  id: string;
+  title: string;
+  channel: string;
+  duration: number;
+  categories?: string[];
+}
+
+export interface CookieValidationResult {
+  isValid: boolean;
+  email?: string;
+  error?: string;
 }

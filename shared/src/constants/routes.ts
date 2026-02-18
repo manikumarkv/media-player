@@ -55,6 +55,22 @@ export const ROUTES = {
     CANCEL: '/downloads/:id',
     INFO: '/downloads/info',
   },
+
+  // YouTube Sync
+  YOUTUBE_SYNC: {
+    BASE: '/youtube-sync',
+    STATUS: '/youtube-sync/status',
+    SETTINGS: '/youtube-sync/settings',
+    HISTORY: '/youtube-sync/history',
+    AUTH: {
+      BROWSER: '/youtube-sync/auth/browser',
+      BROWSER_STATUS: '/youtube-sync/auth/browser/status',
+      COOKIE: '/youtube-sync/auth/cookie',
+      MOUNT_VERIFY: '/youtube-sync/auth/mount/verify',
+    },
+    SYNC: '/youtube-sync/sync',
+    DISCONNECT: '/youtube-sync/disconnect',
+  },
 } as const;
 
 // Helper type for route parameter replacement
