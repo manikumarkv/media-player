@@ -54,12 +54,7 @@ export const youtubeService = {
    */
   async getVideoInfo(url: string): Promise<VideoInfo> {
     return new Promise((resolve, reject) => {
-      const args = [
-        '--dump-json',
-        '--no-playlist',
-        '--js-runtimes', 'node',
-        url,
-      ];
+      const args = ['--dump-json', '--no-playlist', '--js-runtimes', 'node', url];
 
       const process = spawn('yt-dlp', args);
       let stdout = '';
@@ -139,14 +134,18 @@ export const youtubeService = {
     // Use opus format (YouTube's native audio) to avoid quality loss from transcoding
     // opus provides better quality at lower bitrates than mp3
     const args = [
-      '--js-runtimes', 'node',            // Use Node.js for YouTube JS extraction
-      '--no-playlist',                    // Only download single video, not playlist
-      '-x',                               // Extract audio (implies -f bestaudio)
-      '--audio-format', 'opus',           // Keep as opus (YouTube's native format) - no transcoding loss
+      '--js-runtimes',
+      'node', // Use Node.js for YouTube JS extraction
+      '--no-playlist', // Only download single video, not playlist
+      '-x', // Extract audio (implies -f bestaudio)
+      '--audio-format',
+      'opus', // Keep as opus (YouTube's native format) - no transcoding loss
       '--embed-metadata',
       '--write-thumbnail',
-      '--convert-thumbnails', 'jpg',
-      '--output', outputTemplate,
+      '--convert-thumbnails',
+      'jpg',
+      '--output',
+      outputTemplate,
       '--newline',
       '--progress',
       url,
@@ -158,10 +157,13 @@ export const youtubeService = {
 
       let stderrData = '';
 
-      const parseProgress = (line: string) => {
+      const parseProgress = (line: string): void => {
         // Parse progress from yt-dlp output
         // Format: [download]   0.0% of    3.27MiB at  542.04KiB/s ETA 00:06
-        const progressMatch = /\[download\]\s+([\d.]+)%\s+of\s+~?\s*([\d.]+\s*\w+)\s+at\s+([\d.]+\s*\w+\/s)\s+ETA\s+([\d:]+)/.exec(line);
+        const progressMatch =
+          /\[download\]\s+([\d.]+)%\s+of\s+~?\s*([\d.]+\s*\w+)\s+at\s+([\d.]+\s*\w+\/s)\s+ETA\s+([\d:]+)/.exec(
+            line
+          );
         if (progressMatch && onProgress) {
           onProgress({
             percent: parseFloat(progressMatch[1]),
@@ -196,9 +198,7 @@ export const youtubeService = {
 
         // Find the actual output file (opus format)
         const files = fs.readdirSync(outputDir);
-        const audioFile = files.find(
-          (f) => f.startsWith(sanitizedTitle) && f.endsWith('.opus')
-        );
+        const audioFile = files.find((f) => f.startsWith(sanitizedTitle) && f.endsWith('.opus'));
 
         if (!audioFile) {
           reject(new BadRequestError('Output file not found'));
@@ -269,9 +269,7 @@ export const youtubeService = {
    * Extract video ID from URL
    */
   extractVideoId(url: string): string | null {
-    const patterns = [
-      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([\w-]+)/,
-    ];
+    const patterns = [/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([\w-]+)/];
 
     for (const pattern of patterns) {
       const match = pattern.exec(url);
@@ -287,10 +285,11 @@ export const youtubeService = {
    * Validate YouTube playlist URL
    */
   isValidPlaylistUrl(url: string): boolean {
-    // Matches playlist URLs or video URLs with list parameter
+    // Matches playlist URLs or video URLs with list parameter (including music.youtube.com)
     const patterns = [
       /^(https?:\/\/)?(www\.)?youtube\.com\/playlist\?list=[\w-]+/,
       /^(https?:\/\/)?(www\.)?youtube\.com\/watch\?.*list=[\w-]+/,
+      /^(https?:\/\/)?music\.youtube\.com\/playlist\?list=[\w-]+/,
     ];
 
     return patterns.some((pattern) => pattern.test(url));
@@ -306,16 +305,22 @@ export const youtubeService = {
   },
 
   /**
+   * Normalize YouTube URL - converts music.youtube.com to www.youtube.com
+   * This is needed because yt-dlp doesn't directly support music.youtube.com
+   */
+  normalizeUrl(url: string): string {
+    return url.replace(/music\.youtube\.com/, 'www.youtube.com');
+  },
+
+  /**
    * Get playlist info including all video metadata
    */
   async getPlaylistInfo(url: string): Promise<PlaylistInfo> {
+    // Normalize URL (convert music.youtube.com to www.youtube.com)
+    const normalizedUrl = this.normalizeUrl(url);
+
     return new Promise((resolve, reject) => {
-      const args = [
-        '--dump-json',
-        '--flat-playlist',
-        '--js-runtimes', 'node',
-        url,
-      ];
+      const args = ['--dump-json', '--flat-playlist', '--js-runtimes', 'node', normalizedUrl];
 
       const process = spawn('yt-dlp', args);
       let stdout = '';
@@ -337,7 +342,10 @@ export const youtubeService = {
 
         try {
           // yt-dlp outputs one JSON object per line for flat-playlist
-          const lines = stdout.trim().split('\n').filter(line => line.trim());
+          const lines = stdout
+            .trim()
+            .split('\n')
+            .filter((line) => line.trim());
 
           if (lines.length === 0) {
             reject(new BadRequestError('Playlist is empty or not found'));
@@ -358,7 +366,7 @@ export const youtubeService = {
           };
 
           // Parse all videos
-          const videos: PlaylistVideoInfo[] = lines.map(line => {
+          const videos: PlaylistVideoInfo[] = lines.map((line) => {
             const entry = JSON.parse(line) as {
               id: string;
               title: string;
@@ -376,7 +384,11 @@ export const youtubeService = {
           resolve({
             id: firstEntry.playlist_id ?? this.extractPlaylistId(url) ?? '',
             title: firstEntry.playlist_title ?? 'Unknown Playlist',
-            channel: firstEntry.playlist_uploader ?? firstEntry.channel ?? firstEntry.uploader ?? 'Unknown',
+            channel:
+              firstEntry.playlist_uploader ??
+              firstEntry.channel ??
+              firstEntry.uploader ??
+              'Unknown',
             videoCount: videos.length,
             videos,
           });

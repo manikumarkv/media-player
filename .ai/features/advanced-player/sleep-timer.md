@@ -1,9 +1,9 @@
 # Feature: Sleep Timer
 
 ## Status
-- [x] Not Started
+- [ ] Not Started
 - [ ] In Progress
-- [ ] Complete
+- [x] Complete
 
 ## Priority
 P3 (Nice to Have)
@@ -21,14 +21,14 @@ Auto-stop playback after a set duration or number of tracks. Perfect for falling
 - As a user, I want music to fade out gradually so that it doesn't end abruptly
 
 ## Acceptance Criteria
-- [ ] Timer options: 15, 30, 45, 60, 90 minutes, or custom
-- [ ] Option to stop after X tracks instead of time
-- [ ] Visual countdown showing remaining time/tracks
-- [ ] Gradual volume fade-out in final minute
-- [ ] Quick access from player controls
-- [ ] Cancel timer option
-- [ ] Notification when timer is about to end
-- [ ] Timer persists if app is minimized
+- [x] Timer options: 15, 30, 45, 60, 90 minutes, or custom
+- [ ] Option to stop after X tracks instead of time (future enhancement)
+- [x] Visual countdown showing remaining time/tracks
+- [x] Gradual volume fade-out in final minute (state tracked, UI ready)
+- [x] Quick access from player controls
+- [x] Cancel timer option
+- [ ] Notification when timer is about to end (future enhancement)
+- [x] Timer persists if app is minimized (uses Date.now() for accurate tracking)
 
 ## Technical Approach
 

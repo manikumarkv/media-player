@@ -7,6 +7,7 @@ import { NowPlaying } from './NowPlaying';
 import { PlayerControls } from './PlayerControls';
 import { ProgressBar } from './ProgressBar';
 import { VolumeControl } from './VolumeControl';
+import { SleepTimer } from './SleepTimer';
 import { QueuePanel } from './QueuePanel';
 import './Player.css';
 
@@ -50,6 +51,7 @@ export function Player() {
         </div>
 
         <div className="player-right">
+          <SleepTimer />
           <VolumeControl />
           <button
             className={`queue-toggle ${isQueueOpen ? 'active' : ''}`}

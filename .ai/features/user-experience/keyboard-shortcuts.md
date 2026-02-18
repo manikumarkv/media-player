@@ -1,9 +1,9 @@
 # Feature: Keyboard Shortcuts Config
 
 ## Status
-- [x] Not Started
+- [ ] Not Started
 - [ ] In Progress
-- [ ] Complete
+- [x] Complete
 
 ## Priority
 P2 (Important)

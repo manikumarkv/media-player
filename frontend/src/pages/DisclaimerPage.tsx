@@ -1,9 +1,15 @@
+import { Link } from 'react-router-dom';
+import { ArrowLeftIcon } from '../components/Icons';
 import './Pages.css';
 
 export function DisclaimerPage() {
   return (
     <div className="page disclaimer-page">
       <header className="page-header">
+        <Link to="/" className="back-link">
+          <ArrowLeftIcon size={20} />
+          Back
+        </Link>
         <h1 className="page-title">Legal Disclaimer</h1>
         <p className="page-subtitle">Educational and Research Purposes Only</p>
       </header>

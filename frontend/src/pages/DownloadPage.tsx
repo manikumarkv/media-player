@@ -47,10 +47,12 @@ export function DownloadPage() {
   }, [fetchDownloads]);
 
   const detectUrlType = useCallback((value: string): UrlType => {
-    // Playlist URL patterns
-    const playlistRegex = /^(https?:\/\/)?(www\.)?youtube\.com\/(playlist\?list=|watch\?.*list=)[\w-]+/;
+    // Playlist URL patterns (including music.youtube.com)
+    const playlistRegex =
+      /^(https?:\/\/)?(www\.|music\.)?youtube\.com\/(playlist\?list=|watch\?.*list=)[\w-]+/;
     // Video URL patterns (excluding those with list parameter that are not playlist pages)
-    const videoRegex = /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)[\w-]+/;
+    const videoRegex =
+      /^(https?:\/\/)?(www\.|music\.)?(youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)[\w-]+/;
 
     if (playlistRegex.test(value)) {
       return 'playlist';
@@ -118,7 +120,9 @@ export function DownloadPage() {
             <input
               type="text"
               value={url}
-              onChange={(e) => handleUrlChange(e.target.value)}
+              onChange={(e) => {
+                handleUrlChange(e.target.value);
+              }}
               placeholder="Paste YouTube URL here..."
               className="url-input"
             />
@@ -126,7 +130,9 @@ export function DownloadPage() {
               <button
                 type="button"
                 className="clear-button"
-                onClick={() => handleUrlChange('')}
+                onClick={() => {
+                  handleUrlChange('');
+                }}
                 aria-label="Clear URL"
               >
                 <ClearIcon />
@@ -180,7 +186,8 @@ export function DownloadPage() {
                 <h3 className="preview-title">{currentPlaylistPreview.title}</h3>
                 <p className="preview-channel">{currentPlaylistPreview.channel}</p>
                 <p className="preview-meta">
-                  {currentPlaylistPreview.videoCount} videos • {formatTotalDuration(currentPlaylistPreview.videos)}
+                  {currentPlaylistPreview.videoCount} videos •{' '}
+                  {formatTotalDuration(currentPlaylistPreview.videos)}
                 </p>
               </div>
             </div>
@@ -276,7 +283,7 @@ function DownloadItem({ download, onCancel, onRetry, onDelete }: DownloadItemPro
       case 'PENDING':
         return 'Waiting...';
       case 'DOWNLOADING':
-        return `Downloading ${download.progress}%`;
+        return `Downloading ${String(download.progress)}%`;
       case 'PROCESSING':
         return 'Processing...';
       case 'COMPLETED':
@@ -307,36 +314,24 @@ function DownloadItem({ download, onCancel, onRetry, onDelete }: DownloadItemPro
         <div className="download-progress-bar">
           <div
             className="download-progress-fill"
-            style={{ width: `${download.progress}%` }}
+            style={{ width: `${String(download.progress)}%` }}
           />
         </div>
       )}
 
       <div className="download-item-actions">
         {onCancel && isActive && (
-          <button
-            className="action-button"
-            onClick={onCancel}
-            aria-label="Cancel download"
-          >
+          <button className="action-button" onClick={onCancel} aria-label="Cancel download">
             <CancelIcon />
           </button>
         )}
         {onRetry && (
-          <button
-            className="action-button"
-            onClick={onRetry}
-            aria-label="Retry download"
-          >
+          <button className="action-button" onClick={onRetry} aria-label="Retry download">
             <RetryIcon />
           </button>
         )}
         {onDelete && (
-          <button
-            className="action-button"
-            onClick={onDelete}
-            aria-label="Delete download"
-          >
+          <button className="action-button" onClick={onDelete} aria-label="Delete download">
             <DeleteIcon />
           </button>
         )}

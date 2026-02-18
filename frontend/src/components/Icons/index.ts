@@ -54,6 +54,7 @@ export {
   Download as DownloadIcon,
   Clock as HistoryIcon,
   Settings as SettingsIcon,
+  ArrowLeft as ArrowLeftIcon,
 } from 'lucide-react';
 
 // Network Status
@@ -66,6 +67,9 @@ export {
   AlertTriangle as WarningIcon,
   Info as InfoIcon,
 } from 'lucide-react';
+
+// Sleep Timer
+export { Moon as MoonIcon } from 'lucide-react';
 
 // Re-export the props type for consumers who need to type their own wrappers
 export type { LucideProps as IconProps } from 'lucide-react';

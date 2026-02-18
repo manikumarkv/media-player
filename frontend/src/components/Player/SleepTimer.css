@@ -1,0 +1,145 @@
+/* Sleep Timer Container */
+.sleep-timer-container {
+  position: relative;
+}
+
+/* Sleep Timer Button */
+.sleep-timer-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px;
+  background: transparent;
+  border: none;
+  color: #b3b3b3;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.sleep-timer-button:hover {
+  color: #fff;
+}
+
+.sleep-timer-button.active {
+  color: #1db954;
+}
+
+.sleep-timer-countdown {
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Sleep Timer Popover */
+.sleep-timer-popover {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  margin-bottom: 12px;
+  background: #282828;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  min-width: 200px;
+  z-index: 100;
+  animation: slideUp 0.15s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Inactive State - Options */
+.sleep-timer-options {
+  padding: 16px;
+}
+
+.sleep-timer-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 4px;
+}
+
+.sleep-timer-subtitle {
+  font-size: 12px;
+  color: #b3b3b3;
+  margin: 0 0 12px;
+}
+
+.sleep-timer-presets {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.sleep-timer-preset {
+  padding: 10px 12px;
+  background: #333;
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.sleep-timer-preset:hover {
+  background: #404040;
+}
+
+.sleep-timer-preset:active {
+  background: #1db954;
+  color: #000;
+}
+
+/* Active State - Countdown */
+.sleep-timer-active {
+  padding: 20px;
+  text-align: center;
+}
+
+.sleep-timer-active-icon {
+  color: #1db954;
+  margin-bottom: 8px;
+}
+
+.sleep-timer-remaining {
+  font-size: 28px;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.sleep-timer-label {
+  font-size: 12px;
+  color: #b3b3b3;
+  margin: 4px 0 16px;
+}
+
+.sleep-timer-cancel {
+  width: 100%;
+  padding: 10px 16px;
+  background: transparent;
+  border: 1px solid #666;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sleep-timer-cancel:hover {
+  border-color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}

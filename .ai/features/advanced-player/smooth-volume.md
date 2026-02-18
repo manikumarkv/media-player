@@ -1,9 +1,9 @@
 # Feature: Smooth Volume
 
 ## Status
-- [x] Not Started
+- [ ] Not Started
 - [ ] In Progress
-- [ ] Complete
+- [x] Complete
 
 ## Priority
 P1 (Critical)

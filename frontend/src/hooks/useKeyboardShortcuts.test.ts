@@ -4,30 +4,42 @@ import { useKeyboardShortcuts } from './useKeyboardShortcuts';
 import { useKeyboardStore, DEFAULT_SHORTCUTS } from '../stores/keyboardStore';
 import { usePlayerStore } from '../stores/playerStore';
 
-// Type for hotkey callbacks stored on window
-interface HotkeyCallbacks {
-  __hotkeyCallbacks?: Record<string, () => void>;
-}
+// Helper to dispatch keyboard events
+function dispatchKey(key: string, options: Partial<KeyboardEventInit> = {}) {
+  const code =
+    key === 'space'
+      ? 'Space'
+      : key === 'up'
+        ? 'ArrowUp'
+        : key === 'down'
+          ? 'ArrowDown'
+          : key === 'left'
+            ? 'ArrowLeft'
+            : key === 'right'
+              ? 'ArrowRight'
+              : `Key${key.toUpperCase()}`;
 
-// Mock react-hotkeys-hook
-vi.mock('react-hotkeys-hook', () => ({
-  useHotkeys: vi.fn((keys: string, callback: () => void) => {
-    // Store the callback for testing
-    const mockRef = { current: null };
-    // Register the callback in a way we can trigger it
-    const win = window as unknown as HotkeyCallbacks;
-    win.__hotkeyCallbacks ??= {};
-    win.__hotkeyCallbacks[keys] = callback;
-    return mockRef;
-  }),
-}));
+  const eventKey =
+    key === 'space'
+      ? ' '
+      : key === 'up'
+        ? 'ArrowUp'
+        : key === 'down'
+          ? 'ArrowDown'
+          : key === 'left'
+            ? 'ArrowLeft'
+            : key === 'right'
+              ? 'ArrowRight'
+              : key;
 
-// Helper to trigger a hotkey callback
-function triggerHotkey(keys: string) {
-  const win = window as unknown as HotkeyCallbacks;
-  const callbacks = win.__hotkeyCallbacks;
-  const callback = callbacks?.[keys];
-  callback?.();
+  const event = new KeyboardEvent('keydown', {
+    key: eventKey,
+    code,
+    bubbles: true,
+    ...options,
+  });
+
+  window.dispatchEvent(event);
 }
 
 describe('useKeyboardShortcuts', () => {
@@ -48,9 +60,6 @@ describe('useKeyboardShortcuts', () => {
       queue: [],
       queueIndex: -1,
     });
-
-    // Reset hotkey callbacks
-    (window as unknown as { __hotkeyCallbacks: Record<string, () => void> }).__hotkeyCallbacks = {};
   });
 
   afterEach(() => {
@@ -66,7 +75,7 @@ describe('useKeyboardShortcuts', () => {
 
       // Trigger the space shortcut
       act(() => {
-        triggerHotkey('space');
+        dispatchKey('space');
       });
 
       expect(usePlayerStore.getState().isPlaying).toBe(true);
@@ -85,7 +94,7 @@ describe('useKeyboardShortcuts', () => {
       renderHook(() => useKeyboardShortcuts());
 
       act(() => {
-        triggerHotkey('shift+right');
+        dispatchKey('right', { shiftKey: true });
       });
 
       expect(usePlayerStore.getState().queueIndex).toBe(1);
@@ -104,7 +113,7 @@ describe('useKeyboardShortcuts', () => {
       renderHook(() => useKeyboardShortcuts());
 
       act(() => {
-        triggerHotkey('shift+left');
+        dispatchKey('left', { shiftKey: true });
       });
 
       expect(usePlayerStore.getState().queueIndex).toBe(0);
@@ -118,7 +127,7 @@ describe('useKeyboardShortcuts', () => {
       renderHook(() => useKeyboardShortcuts());
 
       act(() => {
-        triggerHotkey('m');
+        dispatchKey('m');
       });
 
       expect(usePlayerStore.getState().isMuted).toBe(true);
@@ -130,7 +139,7 @@ describe('useKeyboardShortcuts', () => {
       renderHook(() => useKeyboardShortcuts());
 
       act(() => {
-        triggerHotkey('up');
+        dispatchKey('up');
       });
 
       expect(usePlayerStore.getState().volume).toBeCloseTo(0.6);
@@ -142,7 +151,7 @@ describe('useKeyboardShortcuts', () => {
       renderHook(() => useKeyboardShortcuts());
 
       act(() => {
-        triggerHotkey('down');
+        dispatchKey('down');
       });
 
       expect(usePlayerStore.getState().volume).toBeCloseTo(0.4);
@@ -154,7 +163,7 @@ describe('useKeyboardShortcuts', () => {
       renderHook(() => useKeyboardShortcuts());
 
       act(() => {
-        triggerHotkey('up');
+        dispatchKey('up');
       });
 
       expect(usePlayerStore.getState().volume).toBe(1);
@@ -166,7 +175,7 @@ describe('useKeyboardShortcuts', () => {
       renderHook(() => useKeyboardShortcuts());
 
       act(() => {
-        triggerHotkey('down');
+        dispatchKey('down');
       });
 
       expect(usePlayerStore.getState().volume).toBe(0);
@@ -181,7 +190,7 @@ describe('useKeyboardShortcuts', () => {
       renderHook(() => useKeyboardShortcuts());
 
       act(() => {
-        triggerHotkey('p');
+        dispatchKey('p');
       });
 
       expect(usePlayerStore.getState().isPlaying).toBe(true);
@@ -194,7 +203,7 @@ describe('useKeyboardShortcuts', () => {
       renderHook(() => useKeyboardShortcuts());
 
       act(() => {
-        triggerHotkey('ctrl+m');
+        dispatchKey('m', { ctrlKey: true });
       });
 
       expect(usePlayerStore.getState().isMuted).toBe(true);

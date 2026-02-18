@@ -36,7 +36,9 @@ describe('youtubeService', () => {
 
   describe('extractVideoId', () => {
     it('should extract video ID from youtube.com watch URLs', () => {
-      expect(youtubeService.extractVideoId('https://www.youtube.com/watch?v=dQw4w9WgXcQ')).toBe('dQw4w9WgXcQ');
+      expect(youtubeService.extractVideoId('https://www.youtube.com/watch?v=dQw4w9WgXcQ')).toBe(
+        'dQw4w9WgXcQ'
+      );
       expect(youtubeService.extractVideoId('https://youtube.com/watch?v=abc123')).toBe('abc123');
     });
 
@@ -49,8 +51,12 @@ describe('youtubeService', () => {
     });
 
     it('should extract video ID from URLs with extra parameters', () => {
-      expect(youtubeService.extractVideoId('https://www.youtube.com/watch?v=dQw4w9WgXcQ&list=PLxyz')).toBe('dQw4w9WgXcQ');
-      expect(youtubeService.extractVideoId('https://youtu.be/dQw4w9WgXcQ?t=30')).toBe('dQw4w9WgXcQ');
+      expect(
+        youtubeService.extractVideoId('https://www.youtube.com/watch?v=dQw4w9WgXcQ&list=PLxyz')
+      ).toBe('dQw4w9WgXcQ');
+      expect(youtubeService.extractVideoId('https://youtu.be/dQw4w9WgXcQ?t=30')).toBe(
+        'dQw4w9WgXcQ'
+      );
     });
 
     it('should return null for invalid URLs', () => {
@@ -62,16 +68,34 @@ describe('youtubeService', () => {
 
   describe('isValidPlaylistUrl', () => {
     it('should return true for valid playlist URLs', () => {
-      expect(youtubeService.isValidPlaylistUrl('https://www.youtube.com/playlist?list=PLrAXtmErZgOeiKm4sgNOknGvNjby9efdf')).toBe(true);
-      expect(youtubeService.isValidPlaylistUrl('https://youtube.com/playlist?list=PLxyz123')).toBe(true);
+      expect(
+        youtubeService.isValidPlaylistUrl(
+          'https://www.youtube.com/playlist?list=PLrAXtmErZgOeiKm4sgNOknGvNjby9efdf'
+        )
+      ).toBe(true);
+      expect(youtubeService.isValidPlaylistUrl('https://youtube.com/playlist?list=PLxyz123')).toBe(
+        true
+      );
+    });
+
+    it('should return true for YouTube Music playlist URLs', () => {
+      expect(
+        youtubeService.isValidPlaylistUrl(
+          'https://music.youtube.com/playlist?list=PLN076H0BWefCubt-LrWvZ7IRPqo_1L4-H'
+        )
+      ).toBe(true);
     });
 
     it('should return true for video URLs with playlist parameter', () => {
-      expect(youtubeService.isValidPlaylistUrl('https://www.youtube.com/watch?v=abc&list=PLxyz123')).toBe(true);
+      expect(
+        youtubeService.isValidPlaylistUrl('https://www.youtube.com/watch?v=abc&list=PLxyz123')
+      ).toBe(true);
     });
 
     it('should return false for video-only URLs without playlist', () => {
-      expect(youtubeService.isValidPlaylistUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ')).toBe(false);
+      expect(youtubeService.isValidPlaylistUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ')).toBe(
+        false
+      );
       expect(youtubeService.isValidPlaylistUrl('https://youtu.be/dQw4w9WgXcQ')).toBe(false);
     });
 
@@ -84,16 +108,46 @@ describe('youtubeService', () => {
 
   describe('extractPlaylistId', () => {
     it('should extract playlist ID from playlist URLs', () => {
-      expect(youtubeService.extractPlaylistId('https://www.youtube.com/playlist?list=PLrAXtmErZgOeiKm4sgNOknGvNjby9efdf')).toBe('PLrAXtmErZgOeiKm4sgNOknGvNjby9efdf');
+      expect(
+        youtubeService.extractPlaylistId(
+          'https://www.youtube.com/playlist?list=PLrAXtmErZgOeiKm4sgNOknGvNjby9efdf'
+        )
+      ).toBe('PLrAXtmErZgOeiKm4sgNOknGvNjby9efdf');
     });
 
     it('should extract playlist ID from video URLs with list parameter', () => {
-      expect(youtubeService.extractPlaylistId('https://www.youtube.com/watch?v=abc&list=PLxyz123&index=5')).toBe('PLxyz123');
+      expect(
+        youtubeService.extractPlaylistId(
+          'https://www.youtube.com/watch?v=abc&list=PLxyz123&index=5'
+        )
+      ).toBe('PLxyz123');
     });
 
     it('should return null for URLs without playlist', () => {
-      expect(youtubeService.extractPlaylistId('https://www.youtube.com/watch?v=dQw4w9WgXcQ')).toBeNull();
+      expect(
+        youtubeService.extractPlaylistId('https://www.youtube.com/watch?v=dQw4w9WgXcQ')
+      ).toBeNull();
       expect(youtubeService.extractPlaylistId('https://youtu.be/dQw4w9WgXcQ')).toBeNull();
+    });
+  });
+
+  describe('normalizeUrl', () => {
+    it('should convert music.youtube.com to www.youtube.com', () => {
+      expect(youtubeService.normalizeUrl('https://music.youtube.com/playlist?list=PLxyz123')).toBe(
+        'https://www.youtube.com/playlist?list=PLxyz123'
+      );
+    });
+
+    it('should leave www.youtube.com URLs unchanged', () => {
+      expect(youtubeService.normalizeUrl('https://www.youtube.com/playlist?list=PLxyz123')).toBe(
+        'https://www.youtube.com/playlist?list=PLxyz123'
+      );
+    });
+
+    it('should leave youtube.com URLs unchanged', () => {
+      expect(youtubeService.normalizeUrl('https://youtube.com/watch?v=abc123')).toBe(
+        'https://youtube.com/watch?v=abc123'
+      );
     });
   });
 });
