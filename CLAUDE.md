@@ -254,6 +254,23 @@ Never hardcode URLs! Use shared constants:
 - **No `any`:** Use explicit types or `unknown`
 - **No floating promises:** Always `await` or `void`
 
+### Icons
+- **NEVER create custom SVG icons** - Always use the installed icon library
+- **Icon Library:** `lucide-react` (centralized in `frontend/src/components/Icons/index.ts`)
+- **Usage:** Import from `../Icons` or `@/components/Icons`
+- **Adding new icons:** Export from `lucide-react` in `Icons/index.ts` with semantic names
+
+```typescript
+// ✅ CORRECT - Use icons from the centralized library
+import { WarningIcon, CloseIcon } from '../Icons';
+<WarningIcon size={18} />
+
+// ❌ WRONG - Never create inline SVGs
+function MyIcon() {
+  return <svg>...</svg>;  // DON'T DO THIS
+}
+```
+
 ### Git Commits
 - **Format:** Conventional Commits (`feat:`, `fix:`, `docs:`, etc.)
 

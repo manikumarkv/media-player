@@ -22,3 +22,4 @@ export {
 } from './ContextMenu';
 export { ToastProvider, useToast } from './Toast';
 export { OfflineIndicator } from './OfflineIndicator';
+export { EducationalBanner } from './EducationalBanner';

@@ -10,6 +10,7 @@ import { PlaylistsPage } from './pages/PlaylistsPage';
 import { PlaylistDetailPage } from './pages/PlaylistDetailPage';
 import { DownloadPage } from './pages/DownloadPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { DisclaimerPage } from './pages/DisclaimerPage';
 import './styles/global.css';
 
 export function App() {
@@ -26,6 +27,7 @@ export function App() {
             <Route path="/playlists/:id" element={<PlaylistDetailPage />} />
             <Route path="/download" element={<DownloadPage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/disclaimer" element={<DisclaimerPage />} />
           </Routes>
         </Layout>
         <AddToPlaylistModal />

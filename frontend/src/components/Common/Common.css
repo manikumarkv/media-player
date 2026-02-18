@@ -576,8 +576,95 @@
   color: #b3b3b3;
 }
 
+/* Educational Banner */
+.educational-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: linear-gradient(90deg, #b45309 0%, #d97706 50%, #b45309 100%);
+  color: #fff;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.educational-banner svg {
+  flex-shrink: 0;
+  color: #fef3c7;
+}
+
+.educational-banner-text {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0;
+}
+
+.educational-banner-text strong {
+  font-weight: 700;
+  color: #fef3c7;
+}
+
+.educational-banner-separator {
+  margin: 0 4px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.educational-banner-description {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.educational-banner-link {
+  flex-shrink: 0;
+  padding: 4px 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  color: #fef3c7;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.2s ease;
+}
+
+.educational-banner-link:hover {
+  background: rgba(0, 0, 0, 0.3);
+  color: #fff;
+}
+
+.educational-banner-dismiss {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: rgba(0, 0, 0, 0.2);
+  border: none;
+  border-radius: 4px;
+  color: #fef3c7;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.educational-banner-dismiss:hover {
+  background: rgba(0, 0, 0, 0.4);
+  color: #fff;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
+  .educational-banner {
+    flex-wrap: wrap;
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+
+  .educational-banner-separator,
+  .educational-banner-description {
+    display: none;
+  }
+
   .toast-container {
     left: 16px;
     right: 16px;

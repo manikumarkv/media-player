@@ -1,9 +1,17 @@
-/* App Layout */
-.app-layout {
+/* App Container (with banner) */
+.app-container {
   display: flex;
+  flex-direction: column;
   min-height: 100vh;
   background: #121212;
   color: #fff;
+}
+
+/* App Layout */
+.app-layout {
+  display: flex;
+  flex: 1;
+  min-height: 0; /* Allow flex children to shrink */
 }
 
 /* Sidebar */
