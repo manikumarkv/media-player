@@ -57,6 +57,41 @@ export interface QueueItem {
   media: Media;
 }
 
+export interface PlaylistVideoInfo {
+  id: string;
+  title: string;
+  duration: number;
+  thumbnail: string;
+}
+
+export interface PlaylistInfo {
+  id: string;
+  title: string;
+  channel: string;
+  videoCount: number;
+  videos: PlaylistVideoInfo[];
+}
+
+export interface Download {
+  id: string;
+  url: string;
+  title: string | null;
+  status: 'PENDING' | 'DOWNLOADING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
+  progress: number;
+  error: string | null;
+  mediaId: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PlaylistDownloadResult {
+  playlistId: string;
+  playlistTitle: string;
+  totalVideos: number;
+  skipped: number;
+  downloads: Download[];
+}
+
 export interface YouTubeSyncStatus {
   isConnected: boolean;
   authMethod: 'cookie' | null;
@@ -357,6 +392,22 @@ class ApiClient {
     start: async (url: string): Promise<ApiResponse<unknown>> => {
       const response = await this.client.post<ApiResponse<unknown>>(
         ENDPOINTS.downloads.start(),
+        { url }
+      );
+      return response.data;
+    },
+
+    getPlaylistInfo: async (url: string): Promise<ApiResponse<PlaylistInfo>> => {
+      const response = await this.client.post<ApiResponse<PlaylistInfo>>(
+        ENDPOINTS.downloads.playlistInfo(),
+        { url }
+      );
+      return response.data;
+    },
+
+    startPlaylist: async (url: string): Promise<ApiResponse<PlaylistDownloadResult>> => {
+      const response = await this.client.post<ApiResponse<PlaylistDownloadResult>>(
+        ENDPOINTS.downloads.playlistStart(),
         { url }
       );
       return response.data;

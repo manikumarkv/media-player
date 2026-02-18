@@ -3,6 +3,7 @@ import { downloadService, youtubeService } from '../services/index.js';
 import {
   type StartDownloadInput,
   type GetInfoInput,
+  type PlaylistUrlInput,
 } from '../validation/download.schema.js';
 
 export const downloadController = {
@@ -131,6 +132,32 @@ export const downloadController = {
     try {
       const available = await youtubeService.isAvailable();
       res.json({ success: true, data: { available } });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async getPlaylistInfo(
+    req: Request<unknown, unknown, PlaylistUrlInput>,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const info = await downloadService.getPlaylistInfo(req.body.url);
+      res.json({ success: true, data: info });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async startPlaylist(
+    req: Request<unknown, unknown, PlaylistUrlInput>,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const result = await downloadService.startPlaylist(req.body.url);
+      res.status(201).json({ success: true, data: result });
     } catch (error) {
       next(error);
     }

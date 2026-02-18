@@ -3,19 +3,25 @@ import { useDownloadStore, type Download, type DownloadStatus } from '../stores/
 import { useSocket } from '../hooks/useSocket';
 import './Pages.css';
 
+type UrlType = 'video' | 'playlist' | 'invalid';
+
 export function DownloadPage() {
   const [url, setUrl] = useState('');
-  const [isValidUrl, setIsValidUrl] = useState(false);
+  const [urlType, setUrlType] = useState<UrlType>('invalid');
 
   const {
     downloads,
     currentPreview,
+    currentPlaylistPreview,
     isLoading,
     isLoadingPreview,
+    isLoadingPlaylistPreview,
     error,
     fetchDownloads,
     getVideoInfo,
+    getPlaylistInfo,
     startDownload,
+    startPlaylistDownload,
     cancelDownload,
     retryDownload,
     deleteDownload,
@@ -40,37 +46,55 @@ export function DownloadPage() {
     void fetchDownloads();
   }, [fetchDownloads]);
 
-  const validateUrl = useCallback((value: string): boolean => {
-    const youtubeRegex =
-      /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)[\w-]+/;
-    return youtubeRegex.test(value);
+  const detectUrlType = useCallback((value: string): UrlType => {
+    // Playlist URL patterns
+    const playlistRegex = /^(https?:\/\/)?(www\.)?youtube\.com\/(playlist\?list=|watch\?.*list=)[\w-]+/;
+    // Video URL patterns (excluding those with list parameter that are not playlist pages)
+    const videoRegex = /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)[\w-]+/;
+
+    if (playlistRegex.test(value)) {
+      return 'playlist';
+    }
+    if (videoRegex.test(value)) {
+      return 'video';
+    }
+    return 'invalid';
   }, []);
 
   const handleUrlChange = useCallback(
     (value: string) => {
       setUrl(value);
-      const isValid = validateUrl(value);
-      setIsValidUrl(isValid);
+      const type = detectUrlType(value);
+      setUrlType(type);
 
-      if (isValid) {
+      if (type === 'video') {
         void getVideoInfo(value);
+      } else if (type === 'playlist') {
+        void getPlaylistInfo(value);
       } else {
         clearPreview();
       }
     },
-    [validateUrl, getVideoInfo, clearPreview]
+    [detectUrlType, getVideoInfo, getPlaylistInfo, clearPreview]
   );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isValidUrl) {
+    if (urlType === 'invalid') {
       return;
     }
 
-    await startDownload(url);
+    if (urlType === 'playlist') {
+      await startPlaylistDownload(url);
+    } else {
+      await startDownload(url);
+    }
     setUrl('');
-    setIsValidUrl(false);
+    setUrlType('invalid');
   };
+
+  const isValidUrl = urlType !== 'invalid';
+  const isLoadingAnyPreview = isLoadingPreview || isLoadingPlaylistPreview;
 
   const activeDownloads = downloads.filter(
     (d) => d.status === 'PENDING' || d.status === 'DOWNLOADING' || d.status === 'PROCESSING'
@@ -113,23 +137,23 @@ export function DownloadPage() {
           <button
             type="submit"
             className="download-button"
-            disabled={!isValidUrl || isLoadingPreview}
+            disabled={!isValidUrl || isLoadingAnyPreview}
           >
             <DownloadIcon />
-            Download
+            {urlType === 'playlist' ? 'Download Playlist' : 'Download'}
           </button>
         </form>
 
         {url && !isValidUrl && (
-          <p className="url-hint error">Please enter a valid YouTube URL</p>
+          <p className="url-hint error">Please enter a valid YouTube URL or playlist</p>
         )}
 
         {error && <p className="url-hint error">{error}</p>}
 
-        {isLoadingPreview && (
+        {isLoadingAnyPreview && (
           <div className="preview-loading">
             <div className="spinner small" />
-            <span>Loading video info...</span>
+            <span>Loading {urlType === 'playlist' ? 'playlist' : 'video'} info...</span>
           </div>
         )}
 
@@ -144,6 +168,35 @@ export function DownloadPage() {
               <h3 className="preview-title">{currentPreview.title}</h3>
               <p className="preview-channel">{currentPreview.channel}</p>
               <p className="preview-duration">{formatDuration(currentPreview.duration)}</p>
+            </div>
+          </div>
+        )}
+
+        {currentPlaylistPreview && (
+          <div className="playlist-preview">
+            <div className="playlist-preview-header">
+              <PlaylistIcon />
+              <div className="preview-info">
+                <h3 className="preview-title">{currentPlaylistPreview.title}</h3>
+                <p className="preview-channel">{currentPlaylistPreview.channel}</p>
+                <p className="preview-meta">
+                  {currentPlaylistPreview.videoCount} videos • {formatTotalDuration(currentPlaylistPreview.videos)}
+                </p>
+              </div>
+            </div>
+            <div className="playlist-videos-preview">
+              {currentPlaylistPreview.videos.slice(0, 5).map((video, index) => (
+                <div key={video.id} className="playlist-video-item">
+                  <span className="video-index">{index + 1}</span>
+                  <span className="video-title">{video.title}</span>
+                  <span className="video-duration">{formatDuration(video.duration)}</span>
+                </div>
+              ))}
+              {currentPlaylistPreview.videos.length > 5 && (
+                <p className="playlist-more">
+                  +{currentPlaylistPreview.videos.length - 5} more videos
+                </p>
+              )}
             </div>
           </div>
         )}
@@ -295,7 +348,18 @@ function DownloadItem({ download, onCancel, onRetry, onDelete }: DownloadItemPro
 function formatDuration(seconds: number): string {
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
-  return `${mins}:${secs.toString().padStart(2, '0')}`;
+  return `${String(mins)}:${secs.toString().padStart(2, '0')}`;
+}
+
+function formatTotalDuration(videos: { duration: number }[]): string {
+  const totalSeconds = videos.reduce((sum, v) => sum + v.duration, 0);
+  const hours = Math.floor(totalSeconds / 3600);
+  const mins = Math.floor((totalSeconds % 3600) / 60);
+
+  if (hours > 0) {
+    return `${String(hours)}h ${String(mins)}m`;
+  }
+  return `${String(mins)} min`;
 }
 
 // Icons
@@ -343,6 +407,14 @@ function DeleteIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
       <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+    </svg>
+  );
+}
+
+function PlaylistIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" width="48" height="48">
+      <path d="M15 6H3v2h12V6zm0 4H3v2h12v-2zM3 16h8v-2H3v2zM17 6v8.18c-.31-.11-.65-.18-1-.18-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3V8h3V6h-5z" />
     </svg>
   );
 }

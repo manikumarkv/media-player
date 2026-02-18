@@ -12,6 +12,11 @@ export const getInfoSchema = z.object({
   url: z.string().url('Valid URL is required'),
 });
 
+export const playlistUrlSchema = z.object({
+  url: z.string().url('Valid playlist URL is required'),
+});
+
 export type DownloadIdInput = z.infer<typeof downloadIdSchema>;
 export type StartDownloadInput = z.infer<typeof startDownloadSchema>;
 export type GetInfoInput = z.infer<typeof getInfoSchema>;
+export type PlaylistUrlInput = z.infer<typeof playlistUrlSchema>;

@@ -6,6 +6,7 @@ import {
   downloadIdSchema,
   startDownloadSchema,
   getInfoSchema,
+  playlistUrlSchema,
 } from '../validation/download.schema.js';
 
 const router: IRouter = Router();
@@ -63,5 +64,19 @@ router.delete(`${ROUTES.DOWNLOADS.BASE}/clear/completed`, downloadController.cle
 
 // DELETE /downloads/clear/failed - Clear failed downloads
 router.delete(`${ROUTES.DOWNLOADS.BASE}/clear/failed`, downloadController.clearFailed);
+
+// POST /downloads/playlist/info - Get playlist info without downloading
+router.post(
+  ROUTES.DOWNLOADS.PLAYLIST_INFO,
+  validate(playlistUrlSchema, 'body'),
+  downloadController.getPlaylistInfo
+);
+
+// POST /downloads/playlist/start - Start downloading a playlist
+router.post(
+  ROUTES.DOWNLOADS.PLAYLIST_START,
+  validate(playlistUrlSchema, 'body'),
+  downloadController.startPlaylist
+);
 
 export default router;

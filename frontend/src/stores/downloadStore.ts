@@ -23,17 +23,44 @@ export interface VideoInfo {
   channel: string;
 }
 
+export interface PlaylistVideoInfo {
+  id: string;
+  title: string;
+  duration: number;
+  thumbnail: string;
+}
+
+export interface PlaylistInfo {
+  id: string;
+  title: string;
+  channel: string;
+  videoCount: number;
+  videos: PlaylistVideoInfo[];
+}
+
+export interface PlaylistDownloadResult {
+  playlistId: string;
+  playlistTitle: string;
+  totalVideos: number;
+  skipped: number;
+  downloads: Download[];
+}
+
 interface DownloadState {
   downloads: Download[];
   currentPreview: VideoInfo | null;
+  currentPlaylistPreview: PlaylistInfo | null;
   isLoading: boolean;
   isLoadingPreview: boolean;
+  isLoadingPlaylistPreview: boolean;
   error: string | null;
 
   // Actions
   fetchDownloads: () => Promise<void>;
   getVideoInfo: (url: string) => Promise<VideoInfo | null>;
+  getPlaylistInfo: (url: string) => Promise<PlaylistInfo | null>;
   startDownload: (url: string) => Promise<Download | null>;
+  startPlaylistDownload: (url: string) => Promise<PlaylistDownloadResult | null>;
   cancelDownload: (id: string) => Promise<void>;
   retryDownload: (id: string) => Promise<void>;
   deleteDownload: (id: string) => Promise<void>;
@@ -50,8 +77,10 @@ interface DownloadState {
 export const useDownloadStore = create<DownloadState>((set) => ({
   downloads: [],
   currentPreview: null,
+  currentPlaylistPreview: null,
   isLoading: false,
   isLoadingPreview: false,
+  isLoadingPlaylistPreview: false,
   error: null,
 
   fetchDownloads: async () => {
@@ -110,6 +139,39 @@ export const useDownloadStore = create<DownloadState>((set) => ({
     }
   },
 
+  getPlaylistInfo: async (url: string) => {
+    set({ isLoadingPlaylistPreview: true, error: null, currentPlaylistPreview: null });
+    try {
+      const response = await apiClient.downloads.getPlaylistInfo(url);
+      set({ currentPlaylistPreview: response.data, isLoadingPlaylistPreview: false });
+      return response.data;
+    } catch (error) {
+      set({
+        error: error instanceof Error ? error.message : 'Failed to get playlist info',
+        isLoadingPlaylistPreview: false,
+      });
+      return null;
+    }
+  },
+
+  startPlaylistDownload: async (url: string) => {
+    set({ error: null });
+    try {
+      const response = await apiClient.downloads.startPlaylist(url);
+      const result = response.data;
+      set((state) => ({
+        downloads: [...result.downloads, ...state.downloads],
+        currentPlaylistPreview: null,
+      }));
+      return result;
+    } catch (error) {
+      set({
+        error: error instanceof Error ? error.message : 'Failed to start playlist download',
+      });
+      return null;
+    }
+  },
+
   cancelDownload: async (id: string) => {
     try {
       await fetch(`${import.meta.env.VITE_API_URL || ''}/api/v1/downloads/${id}`, {
@@ -157,7 +219,7 @@ export const useDownloadStore = create<DownloadState>((set) => ({
   },
 
   clearPreview: () => {
-    set({ currentPreview: null, error: null });
+    set({ currentPreview: null, currentPlaylistPreview: null, error: null });
   },
 
   // Socket event handlers

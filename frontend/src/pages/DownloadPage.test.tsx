@@ -139,7 +139,7 @@ describe('DownloadPage', () => {
       const input = screen.getByPlaceholderText('Paste YouTube URL here...');
       await user.type(input, 'https://invalid-url.com');
 
-      expect(screen.getByText('Please enter a valid YouTube URL')).toBeInTheDocument();
+      expect(screen.getByText('Please enter a valid YouTube URL or playlist')).toBeInTheDocument();
       expect(mockGetVideoInfo).not.toHaveBeenCalled();
     });
 

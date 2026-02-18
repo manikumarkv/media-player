@@ -54,6 +54,8 @@ export const ROUTES = {
     START: '/downloads/start',
     CANCEL: '/downloads/:id',
     INFO: '/downloads/info',
+    PLAYLIST_INFO: '/downloads/playlist/info',
+    PLAYLIST_START: '/downloads/playlist/start',
   },
 
   // YouTube Sync

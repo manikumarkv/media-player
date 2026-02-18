@@ -509,6 +509,78 @@
   margin: 0;
 }
 
+.preview-meta {
+  font-size: 12px;
+  color: #727272;
+  margin: 0;
+}
+
+/* Playlist Preview */
+.playlist-preview {
+  padding: 16px;
+  background: #181818;
+  border-radius: 8px;
+  margin-top: 16px;
+}
+
+.playlist-preview-header {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.playlist-preview-header svg {
+  color: #1db954;
+  flex-shrink: 0;
+}
+
+.playlist-videos-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.playlist-video-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.playlist-video-item:hover {
+  background: #282828;
+}
+
+.video-index {
+  color: #727272;
+  min-width: 24px;
+  text-align: right;
+}
+
+.video-title {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.video-duration {
+  color: #727272;
+  font-size: 12px;
+}
+
+.playlist-more {
+  text-align: center;
+  color: #727272;
+  font-size: 12px;
+  padding: 8px;
+  margin: 0;
+}
+
 /* Downloads List */
 .downloads-section {
   margin-top: 32px;

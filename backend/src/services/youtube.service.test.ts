@@ -59,4 +59,41 @@ describe('youtubeService', () => {
       expect(youtubeService.extractVideoId('')).toBeNull();
     });
   });
+
+  describe('isValidPlaylistUrl', () => {
+    it('should return true for valid playlist URLs', () => {
+      expect(youtubeService.isValidPlaylistUrl('https://www.youtube.com/playlist?list=PLrAXtmErZgOeiKm4sgNOknGvNjby9efdf')).toBe(true);
+      expect(youtubeService.isValidPlaylistUrl('https://youtube.com/playlist?list=PLxyz123')).toBe(true);
+    });
+
+    it('should return true for video URLs with playlist parameter', () => {
+      expect(youtubeService.isValidPlaylistUrl('https://www.youtube.com/watch?v=abc&list=PLxyz123')).toBe(true);
+    });
+
+    it('should return false for video-only URLs without playlist', () => {
+      expect(youtubeService.isValidPlaylistUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ')).toBe(false);
+      expect(youtubeService.isValidPlaylistUrl('https://youtu.be/dQw4w9WgXcQ')).toBe(false);
+    });
+
+    it('should return false for invalid URLs', () => {
+      expect(youtubeService.isValidPlaylistUrl('https://vimeo.com/123456')).toBe(false);
+      expect(youtubeService.isValidPlaylistUrl('not a url')).toBe(false);
+      expect(youtubeService.isValidPlaylistUrl('')).toBe(false);
+    });
+  });
+
+  describe('extractPlaylistId', () => {
+    it('should extract playlist ID from playlist URLs', () => {
+      expect(youtubeService.extractPlaylistId('https://www.youtube.com/playlist?list=PLrAXtmErZgOeiKm4sgNOknGvNjby9efdf')).toBe('PLrAXtmErZgOeiKm4sgNOknGvNjby9efdf');
+    });
+
+    it('should extract playlist ID from video URLs with list parameter', () => {
+      expect(youtubeService.extractPlaylistId('https://www.youtube.com/watch?v=abc&list=PLxyz123&index=5')).toBe('PLxyz123');
+    });
+
+    it('should return null for URLs without playlist', () => {
+      expect(youtubeService.extractPlaylistId('https://www.youtube.com/watch?v=dQw4w9WgXcQ')).toBeNull();
+      expect(youtubeService.extractPlaylistId('https://youtu.be/dQw4w9WgXcQ')).toBeNull();
+    });
+  });
 });

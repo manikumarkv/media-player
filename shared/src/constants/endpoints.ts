@@ -71,6 +71,8 @@ export const ENDPOINTS = {
     cancel: (id: string) => endpoint(ROUTES.DOWNLOADS.CANCEL, { id }),
     info: (url: string) =>
       `${endpoint(ROUTES.DOWNLOADS.INFO)}?url=${encodeURIComponent(url)}`,
+    playlistInfo: () => endpoint(ROUTES.DOWNLOADS.PLAYLIST_INFO),
+    playlistStart: () => endpoint(ROUTES.DOWNLOADS.PLAYLIST_START),
   },
 
   // YouTube Sync

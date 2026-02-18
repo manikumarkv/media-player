@@ -5,8 +5,11 @@ import { mockPrisma, resetMocks } from '../test/setup.js';
 vi.mock('./youtube.service.js', () => ({
   youtubeService: {
     isValidUrl: vi.fn(),
+    isValidPlaylistUrl: vi.fn(),
     extractVideoId: vi.fn(),
+    extractPlaylistId: vi.fn(),
     getVideoInfo: vi.fn(),
+    getPlaylistInfo: vi.fn(),
     downloadAudio: vi.fn(),
     cancelDownload: vi.fn(),
   },
@@ -211,6 +214,108 @@ describe('downloadService', () => {
       expect(mockPrisma.download.deleteMany).toHaveBeenCalledWith({
         where: { status: { in: ['FAILED', 'CANCELLED'] } },
       });
+    });
+  });
+
+  describe('getPlaylistInfo', () => {
+    it('should return playlist info for valid playlist URL', async () => {
+      vi.mocked(youtubeService.isValidPlaylistUrl).mockReturnValue(true);
+      vi.mocked(youtubeService.getPlaylistInfo).mockResolvedValue({
+        id: 'PLxyz123',
+        title: 'My Playlist',
+        channel: 'Test Channel',
+        videoCount: 10,
+        videos: [
+          { id: 'vid1', title: 'Video 1', duration: 180, thumbnail: 'thumb1.jpg' },
+          { id: 'vid2', title: 'Video 2', duration: 240, thumbnail: 'thumb2.jpg' },
+        ],
+      });
+
+      const result = await downloadService.getPlaylistInfo('https://youtube.com/playlist?list=PLxyz123');
+
+      expect(result).toEqual({
+        id: 'PLxyz123',
+        title: 'My Playlist',
+        channel: 'Test Channel',
+        videoCount: 10,
+        videos: [
+          { id: 'vid1', title: 'Video 1', duration: 180, thumbnail: 'thumb1.jpg' },
+          { id: 'vid2', title: 'Video 2', duration: 240, thumbnail: 'thumb2.jpg' },
+        ],
+      });
+    });
+
+    it('should throw error for invalid playlist URL', async () => {
+      vi.mocked(youtubeService.isValidPlaylistUrl).mockReturnValue(false);
+
+      await expect(downloadService.getPlaylistInfo('invalid-url')).rejects.toThrow('Invalid YouTube playlist URL');
+    });
+  });
+
+  describe('startPlaylist', () => {
+    it('should start downloads for all videos in playlist', async () => {
+      vi.mocked(youtubeService.isValidPlaylistUrl).mockReturnValue(true);
+      vi.mocked(youtubeService.getPlaylistInfo).mockResolvedValue({
+        id: 'PLxyz123',
+        title: 'My Playlist',
+        channel: 'Test Channel',
+        videoCount: 2,
+        videos: [
+          { id: 'vid1', title: 'Video 1', duration: 180, thumbnail: 'thumb1.jpg' },
+          { id: 'vid2', title: 'Video 2', duration: 240, thumbnail: 'thumb2.jpg' },
+        ],
+      });
+
+      // Mock that neither video has been downloaded yet
+      vi.mocked(mediaService.findBySourceId).mockResolvedValue(null);
+
+      const mockDownload1 = { id: 'd1', title: 'Video 1', status: 'PENDING' };
+      const mockDownload2 = { id: 'd2', title: 'Video 2', status: 'PENDING' };
+      mockPrisma.download.create
+        .mockResolvedValueOnce(mockDownload1)
+        .mockResolvedValueOnce(mockDownload2);
+
+      const result = await downloadService.startPlaylist('https://youtube.com/playlist?list=PLxyz123');
+
+      expect(result.playlistTitle).toBe('My Playlist');
+      expect(result.totalVideos).toBe(2);
+      expect(result.downloads).toHaveLength(2);
+      expect(mockPrisma.download.create).toHaveBeenCalledTimes(2);
+    });
+
+    it('should skip videos that are already downloaded', async () => {
+      vi.mocked(youtubeService.isValidPlaylistUrl).mockReturnValue(true);
+      vi.mocked(youtubeService.getPlaylistInfo).mockResolvedValue({
+        id: 'PLxyz123',
+        title: 'My Playlist',
+        channel: 'Test Channel',
+        videoCount: 2,
+        videos: [
+          { id: 'vid1', title: 'Video 1', duration: 180, thumbnail: 'thumb1.jpg' },
+          { id: 'vid2', title: 'Video 2', duration: 240, thumbnail: 'thumb2.jpg' },
+        ],
+      });
+
+      // Mock that first video is already downloaded
+      vi.mocked(mediaService.findBySourceId)
+        .mockResolvedValueOnce({ id: 'm1' } as never)
+        .mockResolvedValueOnce(null);
+
+      const mockDownload = { id: 'd2', title: 'Video 2', status: 'PENDING' };
+      mockPrisma.download.create.mockResolvedValue(mockDownload);
+
+      const result = await downloadService.startPlaylist('https://youtube.com/playlist?list=PLxyz123');
+
+      expect(result.totalVideos).toBe(2);
+      expect(result.skipped).toBe(1);
+      expect(result.downloads).toHaveLength(1);
+      expect(mockPrisma.download.create).toHaveBeenCalledTimes(1);
+    });
+
+    it('should throw error for invalid playlist URL', async () => {
+      vi.mocked(youtubeService.isValidPlaylistUrl).mockReturnValue(false);
+
+      await expect(downloadService.startPlaylist('invalid-url')).rejects.toThrow('Invalid YouTube playlist URL');
     });
   });
 });

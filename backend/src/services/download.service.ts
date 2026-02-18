@@ -1,10 +1,18 @@
 import fs from 'fs';
 import { prisma } from '../config/database.js';
 import { NotFoundError, BadRequestError } from '../errors/index.js';
-import { youtubeService } from './youtube.service.js';
+import { youtubeService, type PlaylistInfo } from './youtube.service.js';
 import { mediaService } from './media.service.js';
 import { socketService } from './socket.service.js';
 import { type Download, type DownloadStatus } from '../types/index.js';
+
+export interface PlaylistDownloadResult {
+  playlistId: string;
+  playlistTitle: string;
+  totalVideos: number;
+  skipped: number;
+  downloads: Download[];
+}
 
 export const downloadService = {
   async findAll(): Promise<Download[]> {
@@ -263,5 +271,72 @@ export const downloadService = {
     });
 
     return result.count;
+  },
+
+  /**
+   * Get playlist info without downloading
+   */
+  async getPlaylistInfo(url: string): Promise<PlaylistInfo> {
+    if (!youtubeService.isValidPlaylistUrl(url)) {
+      throw new BadRequestError('Invalid YouTube playlist URL');
+    }
+
+    return youtubeService.getPlaylistInfo(url);
+  },
+
+  /**
+   * Start downloading all videos from a playlist
+   */
+  async startPlaylist(url: string): Promise<PlaylistDownloadResult> {
+    if (!youtubeService.isValidPlaylistUrl(url)) {
+      throw new BadRequestError('Invalid YouTube playlist URL');
+    }
+
+    // Get playlist info
+    const playlistInfo = await youtubeService.getPlaylistInfo(url);
+
+    const downloads: Download[] = [];
+    let skipped = 0;
+
+    // Process each video in the playlist
+    for (const video of playlistInfo.videos) {
+      // Check if already downloaded
+      const existing = await mediaService.findBySourceId(video.id);
+      if (existing) {
+        skipped++;
+        continue;
+      }
+
+      // Create download record
+      const videoUrl = `https://www.youtube.com/watch?v=${video.id}`;
+      const download = await prisma.download.create({
+        data: {
+          url: videoUrl,
+          title: video.title,
+          status: 'PENDING',
+          progress: 0,
+        },
+      });
+
+      downloads.push(download);
+
+      // Start async download process (non-blocking)
+      void this.processDownload(download.id, videoUrl, {
+        id: video.id,
+        title: video.title,
+        duration: video.duration,
+      });
+
+      // Emit started event
+      socketService.emitDownloadStarted(download.id, video.title);
+    }
+
+    return {
+      playlistId: playlistInfo.id,
+      playlistTitle: playlistInfo.title,
+      totalVideos: playlistInfo.videoCount,
+      skipped,
+      downloads,
+    };
   },
 };

@@ -14,6 +14,21 @@ export interface VideoInfo {
   description: string;
 }
 
+export interface PlaylistVideoInfo {
+  id: string;
+  title: string;
+  duration: number;
+  thumbnail: string;
+}
+
+export interface PlaylistInfo {
+  id: string;
+  title: string;
+  channel: string;
+  videoCount: number;
+  videos: PlaylistVideoInfo[];
+}
+
 export interface DownloadOptions {
   format?: 'audio' | 'video';
   quality?: string;
@@ -266,5 +281,113 @@ export const youtubeService = {
     }
 
     return null;
+  },
+
+  /**
+   * Validate YouTube playlist URL
+   */
+  isValidPlaylistUrl(url: string): boolean {
+    // Matches playlist URLs or video URLs with list parameter
+    const patterns = [
+      /^(https?:\/\/)?(www\.)?youtube\.com\/playlist\?list=[\w-]+/,
+      /^(https?:\/\/)?(www\.)?youtube\.com\/watch\?.*list=[\w-]+/,
+    ];
+
+    return patterns.some((pattern) => pattern.test(url));
+  },
+
+  /**
+   * Extract playlist ID from URL
+   */
+  extractPlaylistId(url: string): string | null {
+    const pattern = /[?&]list=([\w-]+)/;
+    const match = pattern.exec(url);
+    return match ? match[1] : null;
+  },
+
+  /**
+   * Get playlist info including all video metadata
+   */
+  async getPlaylistInfo(url: string): Promise<PlaylistInfo> {
+    return new Promise((resolve, reject) => {
+      const args = [
+        '--dump-json',
+        '--flat-playlist',
+        '--js-runtimes', 'node',
+        url,
+      ];
+
+      const process = spawn('yt-dlp', args);
+      let stdout = '';
+      let stderr = '';
+
+      process.stdout.on('data', (data: Buffer) => {
+        stdout += data.toString();
+      });
+
+      process.stderr.on('data', (data: Buffer) => {
+        stderr += data.toString();
+      });
+
+      process.on('close', (code) => {
+        if (code !== 0) {
+          reject(new BadRequestError(`Failed to get playlist info: ${stderr}`));
+          return;
+        }
+
+        try {
+          // yt-dlp outputs one JSON object per line for flat-playlist
+          const lines = stdout.trim().split('\n').filter(line => line.trim());
+
+          if (lines.length === 0) {
+            reject(new BadRequestError('Playlist is empty or not found'));
+            return;
+          }
+
+          // First line contains playlist metadata
+          const firstEntry = JSON.parse(lines[0]) as {
+            id: string;
+            title: string;
+            channel?: string;
+            uploader?: string;
+            duration?: number;
+            thumbnail?: string;
+            playlist_title?: string;
+            playlist_id?: string;
+            playlist_uploader?: string;
+          };
+
+          // Parse all videos
+          const videos: PlaylistVideoInfo[] = lines.map(line => {
+            const entry = JSON.parse(line) as {
+              id: string;
+              title: string;
+              duration?: number;
+              thumbnail?: string;
+            };
+            return {
+              id: entry.id,
+              title: entry.title || 'Unknown Title',
+              duration: entry.duration ?? 0,
+              thumbnail: entry.thumbnail ?? '',
+            };
+          });
+
+          resolve({
+            id: firstEntry.playlist_id ?? this.extractPlaylistId(url) ?? '',
+            title: firstEntry.playlist_title ?? 'Unknown Playlist',
+            channel: firstEntry.playlist_uploader ?? firstEntry.channel ?? firstEntry.uploader ?? 'Unknown',
+            videoCount: videos.length,
+            videos,
+          });
+        } catch {
+          reject(new BadRequestError('Failed to parse playlist info'));
+        }
+      });
+
+      process.on('error', (err) => {
+        reject(new BadRequestError(`yt-dlp not found: ${err.message}`));
+      });
+    });
   },
 };
