@@ -163,6 +163,18 @@ export const youtubeService = {
             info.upload_date
           );
 
+          // Debug: Log extracted metadata
+          console.log('[youtube.service] Extracted metadata:', {
+            title: info.title,
+            artist,
+            album,
+            releaseYear,
+            rawArtist: info.artist,
+            rawCreator: info.creator,
+            rawAlbum: info.album,
+            rawReleaseYear: info.release_year,
+          });
+
           resolve({
             id: info.id,
             title: info.title,

@@ -6,7 +6,7 @@ import { youtubeService, type PlaylistInfo } from './youtube.service.js';
 import { mediaService } from './media.service.js';
 import { playlistService } from './playlist.service.js';
 import { socketService } from './socket.service.js';
-import { type Download, type DownloadStatus } from '../types/index.js';
+import type { Download, DownloadStatus } from '../types/index.js';
 
 export interface PlaylistDownloadOptions {
   videoIds?: string[];
@@ -148,20 +148,15 @@ export const downloadService = {
       await this.updateStatus(downloadId, 'DOWNLOADING');
 
       // Download audio
-      const result = await youtubeService.downloadAudio(
-        url,
-        downloadId,
-        {},
-        (progress) => {
-          void this.updateProgress(downloadId, Math.round(progress.percent));
-          socketService.emitDownloadProgress({
-            downloadId,
-            progress: progress.percent,
-            speed: progress.speed,
-            eta: progress.eta,
-          });
-        }
-      );
+      const result = await youtubeService.downloadAudio(url, downloadId, {}, (progress) => {
+        void this.updateProgress(downloadId, Math.round(progress.percent));
+        socketService.emitDownloadProgress({
+          downloadId,
+          progress: progress.percent,
+          speed: progress.speed,
+          eta: progress.eta,
+        });
+      });
 
       // Update status to processing
       await this.updateStatus(downloadId, 'PROCESSING');
@@ -184,6 +179,16 @@ export const downloadService = {
       // Create media entry with rich metadata
       // Artist fallback: extracted artist > channel name
       const artist = info.artist ?? info.channel ?? undefined;
+
+      // Debug: Log metadata before creating media
+      console.log('[download.service] Creating media with metadata:', {
+        title: info.title,
+        artist,
+        album: info.album,
+        year: info.releaseYear,
+        infoArtist: info.artist,
+        infoChannel: info.channel,
+      });
 
       const media = await mediaService.create({
         title: info.title,
@@ -411,12 +416,40 @@ export const downloadService = {
 
       downloads.push(download);
 
-      // Start async download process (non-blocking), pass playlistId so it can add media when complete
-      void this.processDownload(download.id, videoUrl, {
-        id: video.id,
-        title: video.title,
-        duration: video.duration,
-      }, createdPlaylistId);
+      // Get full video info for rich metadata (artist, album, year)
+      // This is done in the background for each video in the playlist
+      void (async () => {
+        try {
+          const videoInfo = await youtubeService.getVideoInfo(videoUrl);
+          await this.processDownload(
+            download.id,
+            videoUrl,
+            {
+              id: videoInfo.id,
+              title: videoInfo.title,
+              duration: videoInfo.duration,
+              artist: videoInfo.artist,
+              album: videoInfo.album,
+              releaseYear: videoInfo.releaseYear,
+              channel: videoInfo.channel,
+            },
+            createdPlaylistId
+          );
+        } catch (error) {
+          console.error(`Failed to get video info for ${video.id}:`, error);
+          // Fall back to basic info if metadata fetch fails
+          await this.processDownload(
+            download.id,
+            videoUrl,
+            {
+              id: video.id,
+              title: video.title,
+              duration: video.duration,
+            },
+            createdPlaylistId
+          );
+        }
+      })();
 
       // Emit started event
       socketService.emitDownloadStarted(download.id, video.title);

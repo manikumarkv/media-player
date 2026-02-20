@@ -95,6 +95,14 @@ export const mediaService = {
   },
 
   async create(input: CreateMediaInput): Promise<Media> {
+    // Debug: Log what we're about to insert
+    console.log('[media.service.create] Input:', {
+      title: input.title,
+      artist: input.artist,
+      album: input.album,
+      year: input.year,
+    });
+
     return prisma.media.create({
       data: {
         title: input.title,
