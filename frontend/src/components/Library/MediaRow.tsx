@@ -3,6 +3,7 @@ import { usePlayerStore, type Track } from '../../stores/playerStore';
 import { useLibraryStore } from '../../stores/libraryStore';
 import { usePlaylistStore } from '../../stores/playlistStore';
 import { ENDPOINTS } from '@media-player/shared';
+import { getMediaUrl } from '../../utils/electron';
 import type { Media } from '../../api/client';
 import {
   PlayIcon,
@@ -43,7 +44,7 @@ export function MediaRow({ media, index, onRemove }: MediaRowProps) {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showMenu]);
-  const thumbnailUrl = media.thumbnailPath ? ENDPOINTS.media.thumbnail(media.id) : null;
+  const thumbnailUrl = media.thumbnailPath ? getMediaUrl(ENDPOINTS.media.thumbnail(media.id)) : null;
 
   const handlePlay = () => {
     const track: Track = {
@@ -138,6 +139,10 @@ export function MediaRow({ media, index, onRemove }: MediaRowProps) {
       </div>
 
       <div className="media-row-album">{media.album ?? ''}</div>
+
+      <div className="media-row-plays" data-testid="play-count">
+        {media.playCount}
+      </div>
 
       <div className="media-row-actions">
         <button

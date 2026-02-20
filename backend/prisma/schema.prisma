@@ -12,6 +12,7 @@ model Media {
   title        String
   artist       String?
   album        String?
+  year         Int?     // Release year (e.g., 2024)
   duration     Int      // Duration in seconds
   filePath     String   @unique
   thumbnailPath String?

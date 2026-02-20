@@ -100,6 +100,7 @@ export const mediaService = {
         title: input.title,
         artist: input.artist,
         album: input.album,
+        year: input.year,
         duration: input.duration,
         filePath: input.filePath,
         thumbnailPath: input.thumbnailPath,

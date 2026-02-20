@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 
 // Import the actual service for URL validation tests (no mocking needed)
-const { youtubeService } = await import('./youtube.service.js');
+const { youtubeService, parseReleaseYear } = await import('./youtube.service.js');
 
 describe('youtubeService', () => {
   describe('isValidUrl', () => {
@@ -92,6 +92,14 @@ describe('youtubeService', () => {
       ).toBe(true);
     });
 
+    it('should return true for YouTube Music watch URLs with playlist parameter', () => {
+      expect(
+        youtubeService.isValidPlaylistUrl(
+          'https://music.youtube.com/watch?v=6DCOjq0omBc&list=RDAMVMz4I2H6Mulc0'
+        )
+      ).toBe(true);
+    });
+
     it('should return false for video-only URLs without playlist', () => {
       expect(youtubeService.isValidPlaylistUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ')).toBe(
         false
@@ -149,5 +157,44 @@ describe('youtubeService', () => {
         'https://youtube.com/watch?v=abc123'
       );
     });
+  });
+});
+
+describe('parseReleaseYear', () => {
+  it('should parse release_year as a number', () => {
+    expect(parseReleaseYear(2024, undefined, undefined)).toBe(2024);
+    expect(parseReleaseYear(1999, undefined, undefined)).toBe(1999);
+  });
+
+  it('should parse release_year as a string', () => {
+    expect(parseReleaseYear('2024', undefined, undefined)).toBe(2024);
+    expect(parseReleaseYear('1985', undefined, undefined)).toBe(1985);
+  });
+
+  it('should fall back to release_date YYYYMMDD format', () => {
+    expect(parseReleaseYear(undefined, '20240315', undefined)).toBe(2024);
+    expect(parseReleaseYear(undefined, '19991231', undefined)).toBe(1999);
+  });
+
+  it('should fall back to upload_date YYYYMMDD format', () => {
+    expect(parseReleaseYear(undefined, undefined, '20230612')).toBe(2023);
+    expect(parseReleaseYear(undefined, undefined, '20180101')).toBe(2018);
+  });
+
+  it('should prefer release_year over release_date over upload_date', () => {
+    expect(parseReleaseYear(2024, '20230101', '20220101')).toBe(2024);
+    expect(parseReleaseYear(undefined, '20230101', '20220101')).toBe(2023);
+  });
+
+  it('should return null for invalid values', () => {
+    expect(parseReleaseYear(undefined, undefined, undefined)).toBeNull();
+    expect(parseReleaseYear(null, null, null)).toBeNull();
+    expect(parseReleaseYear('invalid', 'invalid', 'invalid')).toBeNull();
+    expect(parseReleaseYear('', '', '')).toBeNull();
+  });
+
+  it('should handle invalid year formats', () => {
+    expect(parseReleaseYear('abc', undefined, undefined)).toBeNull();
+    expect(parseReleaseYear(undefined, 'not-a-date', undefined)).toBeNull();
   });
 });

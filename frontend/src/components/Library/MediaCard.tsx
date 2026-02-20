@@ -3,6 +3,7 @@ import { usePlayerStore, type Track } from '../../stores/playerStore';
 import { useLibraryStore } from '../../stores/libraryStore';
 import { usePlaylistStore } from '../../stores/playlistStore';
 import { ENDPOINTS } from '@media-player/shared';
+import { getMediaUrl } from '../../utils/electron';
 import type { Media } from '../../api/client';
 import { PlayIcon, MusicNoteIcon, HeartIcon, QueueIcon, PlaylistAddIcon, DeleteIcon } from '../Icons';
 import './Library.css';
@@ -19,7 +20,7 @@ export function MediaCard({ media, showArtist = true }: MediaCardProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const thumbnailUrl = media.thumbnailPath ? ENDPOINTS.media.thumbnail(media.id) : null;
+  const thumbnailUrl = media.thumbnailPath ? getMediaUrl(ENDPOINTS.media.thumbnail(media.id)) : null;
 
   const handlePlay = () => {
     const track: Track = {
@@ -120,6 +121,11 @@ export function MediaCard({ media, showArtist = true }: MediaCardProps) {
         {showArtist && (
           <p className="media-card-artist" title={media.artist ?? 'Unknown Artist'}>
             {media.artist ?? 'Unknown Artist'}
+          </p>
+        )}
+        {media.playCount > 0 && (
+          <p className="media-card-plays" data-testid="play-count">
+            {media.playCount} {media.playCount === 1 ? 'play' : 'plays'}
           </p>
         )}
       </div>

@@ -90,6 +90,9 @@ describe('downloadService', () => {
         channel: 'Test Channel',
         uploadDate: '2024-01-01',
         description: 'Test description',
+        artist: 'Test Artist',
+        album: 'Test Album',
+        releaseYear: 2024,
       });
 
       const result = await downloadService.getInfo('https://youtube.com/watch?v=abc123');
@@ -123,6 +126,9 @@ describe('downloadService', () => {
         channel: 'Test Channel',
         uploadDate: '2024-01-01',
         description: 'Test',
+        artist: 'Test Artist',
+        album: 'Test Album',
+        releaseYear: 2024,
       });
 
       const mockDownload = { id: '1', title: 'Test Video', status: 'PENDING' };
@@ -177,6 +183,9 @@ describe('downloadService', () => {
         channel: '',
         uploadDate: '',
         description: '',
+        artist: null,
+        album: null,
+        releaseYear: null,
       });
 
       const result = await downloadService.retry('1');
@@ -316,6 +325,191 @@ describe('downloadService', () => {
       vi.mocked(youtubeService.isValidPlaylistUrl).mockReturnValue(false);
 
       await expect(downloadService.startPlaylist('invalid-url')).rejects.toThrow('Invalid YouTube playlist URL');
+    });
+
+    it('should download only specified videoIds when provided', async () => {
+      vi.mocked(youtubeService.isValidPlaylistUrl).mockReturnValue(true);
+      vi.mocked(youtubeService.getPlaylistInfo).mockResolvedValue({
+        id: 'PLxyz123',
+        title: 'My Playlist',
+        channel: 'Test Channel',
+        videoCount: 3,
+        videos: [
+          { id: 'vid1', title: 'Video 1', duration: 180, thumbnail: 'thumb1.jpg' },
+          { id: 'vid2', title: 'Video 2', duration: 240, thumbnail: 'thumb2.jpg' },
+          { id: 'vid3', title: 'Video 3', duration: 300, thumbnail: 'thumb3.jpg' },
+        ],
+      });
+
+      vi.mocked(mediaService.findBySourceId).mockResolvedValue(null);
+
+      const mockDownload = { id: 'd1', title: 'Video 1', status: 'PENDING' };
+      mockPrisma.download.create.mockResolvedValue(mockDownload);
+
+      const result = await downloadService.startPlaylist(
+        'https://youtube.com/playlist?list=PLxyz123',
+        { videoIds: ['vid1'] }
+      );
+
+      expect(result.totalVideos).toBe(3);
+      expect(result.downloads).toHaveLength(1);
+      expect(mockPrisma.download.create).toHaveBeenCalledTimes(1);
+    });
+
+    it('should skip videos not in videoIds array', async () => {
+      vi.mocked(youtubeService.isValidPlaylistUrl).mockReturnValue(true);
+      vi.mocked(youtubeService.getPlaylistInfo).mockResolvedValue({
+        id: 'PLxyz123',
+        title: 'My Playlist',
+        channel: 'Test Channel',
+        videoCount: 3,
+        videos: [
+          { id: 'vid1', title: 'Video 1', duration: 180, thumbnail: 'thumb1.jpg' },
+          { id: 'vid2', title: 'Video 2', duration: 240, thumbnail: 'thumb2.jpg' },
+          { id: 'vid3', title: 'Video 3', duration: 300, thumbnail: 'thumb3.jpg' },
+        ],
+      });
+
+      vi.mocked(mediaService.findBySourceId).mockResolvedValue(null);
+
+      const mockDownload1 = { id: 'd1', title: 'Video 1', status: 'PENDING' };
+      const mockDownload3 = { id: 'd3', title: 'Video 3', status: 'PENDING' };
+      mockPrisma.download.create
+        .mockResolvedValueOnce(mockDownload1)
+        .mockResolvedValueOnce(mockDownload3);
+
+      const result = await downloadService.startPlaylist(
+        'https://youtube.com/playlist?list=PLxyz123',
+        { videoIds: ['vid1', 'vid3'] }
+      );
+
+      expect(result.downloads).toHaveLength(2);
+      expect(mockPrisma.download.create).toHaveBeenCalledTimes(2);
+    });
+
+    it('should download all videos when videoIds is not provided', async () => {
+      vi.mocked(youtubeService.isValidPlaylistUrl).mockReturnValue(true);
+      vi.mocked(youtubeService.getPlaylistInfo).mockResolvedValue({
+        id: 'PLxyz123',
+        title: 'My Playlist',
+        channel: 'Test Channel',
+        videoCount: 2,
+        videos: [
+          { id: 'vid1', title: 'Video 1', duration: 180, thumbnail: 'thumb1.jpg' },
+          { id: 'vid2', title: 'Video 2', duration: 240, thumbnail: 'thumb2.jpg' },
+        ],
+      });
+
+      vi.mocked(mediaService.findBySourceId).mockResolvedValue(null);
+
+      const mockDownload1 = { id: 'd1', title: 'Video 1', status: 'PENDING' };
+      const mockDownload2 = { id: 'd2', title: 'Video 2', status: 'PENDING' };
+      mockPrisma.download.create
+        .mockResolvedValueOnce(mockDownload1)
+        .mockResolvedValueOnce(mockDownload2);
+
+      const result = await downloadService.startPlaylist(
+        'https://youtube.com/playlist?list=PLxyz123'
+      );
+
+      expect(result.downloads).toHaveLength(2);
+    });
+
+    it('should return playlistId when createPlaylist is true', async () => {
+      vi.mocked(youtubeService.isValidPlaylistUrl).mockReturnValue(true);
+      vi.mocked(youtubeService.getPlaylistInfo).mockResolvedValue({
+        id: 'PLxyz123',
+        title: 'My Playlist',
+        channel: 'Test Channel',
+        videoCount: 1,
+        videos: [
+          { id: 'vid1', title: 'Video 1', duration: 180, thumbnail: 'thumb1.jpg' },
+        ],
+      });
+
+      vi.mocked(mediaService.findBySourceId).mockResolvedValue(null);
+
+      const mockDownload = { id: 'd1', title: 'Video 1', status: 'PENDING' };
+      mockPrisma.download.create.mockResolvedValue(mockDownload);
+
+      // Mock playlist creation
+      const mockPlaylist = { id: 'playlist-123', name: 'Custom Playlist Name', isSystem: false };
+      mockPrisma.playlist.create.mockResolvedValue(mockPlaylist);
+
+      const result = await downloadService.startPlaylist(
+        'https://youtube.com/playlist?list=PLxyz123',
+        { createPlaylist: true, playlistName: 'Custom Playlist Name' }
+      );
+
+      expect(result.createdPlaylistId).toBe('playlist-123');
+      expect(mockPrisma.playlist.create).toHaveBeenCalledWith({
+        data: {
+          name: 'Custom Playlist Name',
+          description: expect.any(String),
+          isSystem: false,
+        },
+      });
+    });
+
+    it('should use YouTube playlist title as default name when createPlaylist is true but playlistName not provided', async () => {
+      vi.mocked(youtubeService.isValidPlaylistUrl).mockReturnValue(true);
+      vi.mocked(youtubeService.getPlaylistInfo).mockResolvedValue({
+        id: 'PLxyz123',
+        title: 'YouTube Playlist Title',
+        channel: 'Test Channel',
+        videoCount: 1,
+        videos: [
+          { id: 'vid1', title: 'Video 1', duration: 180, thumbnail: 'thumb1.jpg' },
+        ],
+      });
+
+      vi.mocked(mediaService.findBySourceId).mockResolvedValue(null);
+
+      const mockDownload = { id: 'd1', title: 'Video 1', status: 'PENDING' };
+      mockPrisma.download.create.mockResolvedValue(mockDownload);
+
+      const mockPlaylist = { id: 'playlist-456', name: 'YouTube Playlist Title', isSystem: false };
+      mockPrisma.playlist.create.mockResolvedValue(mockPlaylist);
+
+      const result = await downloadService.startPlaylist(
+        'https://youtube.com/playlist?list=PLxyz123',
+        { createPlaylist: true }
+      );
+
+      expect(result.createdPlaylistId).toBe('playlist-456');
+      expect(mockPrisma.playlist.create).toHaveBeenCalledWith({
+        data: {
+          name: 'YouTube Playlist Title',
+          description: expect.any(String),
+          isSystem: false,
+        },
+      });
+    });
+
+    it('should not create playlist when createPlaylist is false', async () => {
+      vi.mocked(youtubeService.isValidPlaylistUrl).mockReturnValue(true);
+      vi.mocked(youtubeService.getPlaylistInfo).mockResolvedValue({
+        id: 'PLxyz123',
+        title: 'My Playlist',
+        channel: 'Test Channel',
+        videoCount: 1,
+        videos: [
+          { id: 'vid1', title: 'Video 1', duration: 180, thumbnail: 'thumb1.jpg' },
+        ],
+      });
+
+      vi.mocked(mediaService.findBySourceId).mockResolvedValue(null);
+
+      const mockDownload = { id: 'd1', title: 'Video 1', status: 'PENDING' };
+      mockPrisma.download.create.mockResolvedValue(mockDownload);
+
+      const result = await downloadService.startPlaylist(
+        'https://youtube.com/playlist?list=PLxyz123',
+        { createPlaylist: false }
+      );
+
+      expect(result.createdPlaylistId).toBeUndefined();
+      expect(mockPrisma.playlist.create).not.toHaveBeenCalled();
     });
   });
 });

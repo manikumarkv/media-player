@@ -1,10 +1,18 @@
 import fs from 'fs';
+import path from 'path';
 import { prisma } from '../config/database.js';
 import { NotFoundError, BadRequestError } from '../errors/index.js';
 import { youtubeService, type PlaylistInfo } from './youtube.service.js';
 import { mediaService } from './media.service.js';
+import { playlistService } from './playlist.service.js';
 import { socketService } from './socket.service.js';
 import { type Download, type DownloadStatus } from '../types/index.js';
+
+export interface PlaylistDownloadOptions {
+  videoIds?: string[];
+  createPlaylist?: boolean;
+  playlistName?: string;
+}
 
 export interface PlaylistDownloadResult {
   playlistId: string;
@@ -12,6 +20,7 @@ export interface PlaylistDownloadResult {
   totalVideos: number;
   skipped: number;
   downloads: Download[];
+  createdPlaylistId?: string;
 }
 
 export const downloadService = {
@@ -69,21 +78,29 @@ export const downloadService = {
   },
 
   async start(url: string): Promise<Download> {
+    console.log('[downloadService.start] Starting download for:', url);
+
     if (!youtubeService.isValidUrl(url)) {
+      console.log('[downloadService.start] Invalid URL');
       throw new BadRequestError('Invalid YouTube URL');
     }
 
     // Check if already downloaded
     const videoId = youtubeService.extractVideoId(url);
+    console.log('[downloadService.start] Video ID:', videoId);
+
     if (videoId) {
       const existing = await mediaService.findBySourceId(videoId);
       if (existing) {
+        console.log('[downloadService.start] Already downloaded');
         throw new BadRequestError('This video has already been downloaded');
       }
     }
 
     // Get video info first
+    console.log('[downloadService.start] Getting video info...');
     const info = await youtubeService.getVideoInfo(url);
+    console.log('[downloadService.start] Got video info:', info.title);
 
     // Create download record
     const download = await prisma.download.create({
@@ -95,8 +112,16 @@ export const downloadService = {
       },
     });
 
-    // Start async download process
-    void this.processDownload(download.id, url, info);
+    // Start async download process with rich metadata
+    void this.processDownload(download.id, url, {
+      id: info.id,
+      title: info.title,
+      duration: info.duration,
+      artist: info.artist,
+      album: info.album,
+      releaseYear: info.releaseYear,
+      channel: info.channel,
+    });
 
     // Emit started event
     socketService.emitDownloadStarted(download.id, info.title);
@@ -107,7 +132,16 @@ export const downloadService = {
   async processDownload(
     downloadId: string,
     url: string,
-    info: { id: string; title: string; duration: number }
+    info: {
+      id: string;
+      title: string;
+      duration: number;
+      artist?: string | null;
+      album?: string | null;
+      releaseYear?: number | null;
+      channel?: string;
+    },
+    playlistId?: string
   ): Promise<void> {
     try {
       // Update status to downloading
@@ -136,15 +170,32 @@ export const downloadService = {
       // Get file size
       const fileSize = fs.statSync(result.filePath).size;
 
-      // Create media entry
+      // Detect mimeType based on file extension
+      const ext = path.extname(result.filePath).toLowerCase();
+      const mimeTypeMap: Record<string, string> = {
+        '.opus': 'audio/opus',
+        '.webm': 'audio/webm',
+        '.m4a': 'audio/mp4',
+        '.mp3': 'audio/mpeg',
+        '.ogg': 'audio/ogg',
+      };
+      const mimeType = mimeTypeMap[ext] || 'audio/webm';
+
+      // Create media entry with rich metadata
+      // Artist fallback: extracted artist > channel name
+      const artist = info.artist ?? info.channel ?? undefined;
+
       const media = await mediaService.create({
         title: info.title,
+        artist,
+        album: info.album ?? undefined,
+        year: info.releaseYear ?? undefined,
         duration: info.duration,
         filePath: result.filePath,
         thumbnailPath: result.thumbnailPath,
         sourceUrl: url,
         sourceId: info.id,
-        mimeType: 'audio/opus',
+        mimeType,
         fileSize,
       });
 
@@ -157,6 +208,11 @@ export const downloadService = {
           mediaId: media.id,
         },
       });
+
+      // Add to playlist if specified
+      if (playlistId) {
+        await playlistService.addItem(playlistId, media.id);
+      }
 
       // Emit completion event
       socketService.emitDownloadCompleted(downloadId, media.id);
@@ -231,12 +287,16 @@ export const downloadService = {
       },
     });
 
-    // Get video info and restart
+    // Get video info and restart with rich metadata
     const info = await youtubeService.getVideoInfo(download.url);
     void this.processDownload(id, download.url, {
       id: info.id,
       title: info.title,
       duration: info.duration,
+      artist: info.artist,
+      album: info.album,
+      releaseYear: info.releaseYear,
+      channel: info.channel,
     });
 
     socketService.emitDownloadStarted(id, info.title);
@@ -285,9 +345,17 @@ export const downloadService = {
   },
 
   /**
-   * Start downloading all videos from a playlist
+   * Start downloading videos from a playlist
+   * @param url - The YouTube playlist URL
+   * @param options - Optional parameters for selective download and playlist creation
+   * @param options.videoIds - If provided, only download these specific video IDs
+   * @param options.createPlaylist - If true, create a playlist in the app with downloaded songs
+   * @param options.playlistName - Custom name for the created playlist (defaults to YouTube playlist title)
    */
-  async startPlaylist(url: string): Promise<PlaylistDownloadResult> {
+  async startPlaylist(
+    url: string,
+    options?: PlaylistDownloadOptions
+  ): Promise<PlaylistDownloadResult> {
     if (!youtubeService.isValidPlaylistUrl(url)) {
       throw new BadRequestError('Invalid YouTube playlist URL');
     }
@@ -298,12 +366,35 @@ export const downloadService = {
     const downloads: Download[] = [];
     let skipped = 0;
 
+    // Create playlist FIRST if requested (so we can add items as they complete)
+    let createdPlaylistId: string | undefined;
+    if (options?.createPlaylist) {
+      const playlistName = options.playlistName ?? playlistInfo.title;
+      const playlist = await prisma.playlist.create({
+        data: {
+          name: playlistName,
+          description: `Downloaded from YouTube playlist: ${playlistInfo.title}`,
+          isSystem: false,
+        },
+      });
+      createdPlaylistId = playlist.id;
+    }
+
+    // Filter videos if videoIds are specified
+    const videosToDownload = options?.videoIds
+      ? playlistInfo.videos.filter((video) => options.videoIds?.includes(video.id))
+      : playlistInfo.videos;
+
     // Process each video in the playlist
-    for (const video of playlistInfo.videos) {
+    for (const video of videosToDownload) {
       // Check if already downloaded
       const existing = await mediaService.findBySourceId(video.id);
       if (existing) {
         skipped++;
+        // If already downloaded and we have a playlist, add existing media to it
+        if (createdPlaylistId) {
+          await playlistService.addItem(createdPlaylistId, existing.id);
+        }
         continue;
       }
 
@@ -320,12 +411,12 @@ export const downloadService = {
 
       downloads.push(download);
 
-      // Start async download process (non-blocking)
+      // Start async download process (non-blocking), pass playlistId so it can add media when complete
       void this.processDownload(download.id, videoUrl, {
         id: video.id,
         title: video.title,
         duration: video.duration,
-      });
+      }, createdPlaylistId);
 
       // Emit started event
       socketService.emitDownloadStarted(download.id, video.title);
@@ -337,6 +428,7 @@ export const downloadService = {
       totalVideos: playlistInfo.videoCount,
       skipped,
       downloads,
+      createdPlaylistId,
     };
   },
 };

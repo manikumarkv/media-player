@@ -51,6 +51,7 @@ export interface CreateMediaInput {
   title: string;
   artist?: string;
   album?: string;
+  year?: number;
   duration: number;
   filePath: string;
   thumbnailPath?: string;
