@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { act } from '@testing-library/react';
-import { useDownloadStore, type Download, type VideoInfo } from './downloadStore';
+import { useDownloadStore, type Download, type VideoInfo, type PlaylistVideoInfo } from './downloadStore';
 import { apiClient } from '../api/client';
 
 // Mock apiClient
@@ -9,6 +9,8 @@ vi.mock('../api/client', () => ({
     downloads: {
       list: vi.fn(),
       start: vi.fn(),
+      getPlaylistInfo: vi.fn(),
+      startPlaylist: vi.fn(),
     },
   },
 }));
@@ -53,6 +55,12 @@ const mockVideoInfo: VideoInfo = {
   channel: 'Test Channel',
 };
 
+const mockPlaylistVideos: PlaylistVideoInfo[] = [
+  { id: 'vid1', title: 'Video 1', duration: 180, thumbnail: 'thumb1.jpg' },
+  { id: 'vid2', title: 'Video 2', duration: 240, thumbnail: 'thumb2.jpg' },
+  { id: 'vid3', title: 'Video 3', duration: 300, thumbnail: 'thumb3.jpg' },
+];
+
 describe('downloadStore', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -60,9 +68,16 @@ describe('downloadStore', () => {
     useDownloadStore.setState({
       downloads: [],
       currentPreview: null,
+      currentPlaylistPreview: null,
       isLoading: false,
       isLoadingPreview: false,
+      isLoadingPlaylistPreview: false,
       error: null,
+      // Selection state
+      selectedVideoIds: new Set<string>(),
+      groupBy: 'default',
+      createPlaylist: false,
+      playlistName: '',
     });
   });
 
@@ -418,6 +433,234 @@ describe('downloadStore', () => {
 
         const state = useDownloadStore.getState();
         expect(state.downloads[0].status).toBe('CANCELLED');
+      });
+    });
+  });
+
+  describe('playlist selection', () => {
+    describe('toggleVideoSelection', () => {
+      it('adds video to selection when not selected', () => {
+        act(() => {
+          useDownloadStore.getState().toggleVideoSelection('vid1');
+        });
+
+        const state = useDownloadStore.getState();
+        expect(state.selectedVideoIds.has('vid1')).toBe(true);
+      });
+
+      it('removes video from selection when already selected', () => {
+        useDownloadStore.setState({
+          selectedVideoIds: new Set(['vid1', 'vid2']),
+        });
+
+        act(() => {
+          useDownloadStore.getState().toggleVideoSelection('vid1');
+        });
+
+        const state = useDownloadStore.getState();
+        expect(state.selectedVideoIds.has('vid1')).toBe(false);
+        expect(state.selectedVideoIds.has('vid2')).toBe(true);
+      });
+    });
+
+    describe('selectAllVideos', () => {
+      it('selects all videos from current playlist preview', () => {
+        useDownloadStore.setState({
+          currentPlaylistPreview: {
+            id: 'playlist1',
+            title: 'Test Playlist',
+            channel: 'Test Channel',
+            videoCount: 3,
+            videos: mockPlaylistVideos,
+          },
+        });
+
+        act(() => {
+          useDownloadStore.getState().selectAllVideos();
+        });
+
+        const state = useDownloadStore.getState();
+        expect(state.selectedVideoIds.size).toBe(3);
+        expect(state.selectedVideoIds.has('vid1')).toBe(true);
+        expect(state.selectedVideoIds.has('vid2')).toBe(true);
+        expect(state.selectedVideoIds.has('vid3')).toBe(true);
+      });
+
+      it('does nothing when no playlist preview', () => {
+        act(() => {
+          useDownloadStore.getState().selectAllVideos();
+        });
+
+        const state = useDownloadStore.getState();
+        expect(state.selectedVideoIds.size).toBe(0);
+      });
+    });
+
+    describe('selectNoneVideos', () => {
+      it('clears all video selections', () => {
+        useDownloadStore.setState({
+          selectedVideoIds: new Set(['vid1', 'vid2', 'vid3']),
+        });
+
+        act(() => {
+          useDownloadStore.getState().selectNoneVideos();
+        });
+
+        const state = useDownloadStore.getState();
+        expect(state.selectedVideoIds.size).toBe(0);
+      });
+    });
+
+    describe('setGroupBy', () => {
+      it('sets groupBy to artist', () => {
+        act(() => {
+          useDownloadStore.getState().setGroupBy('artist');
+        });
+
+        const state = useDownloadStore.getState();
+        expect(state.groupBy).toBe('artist');
+      });
+
+      it('sets groupBy to album', () => {
+        act(() => {
+          useDownloadStore.getState().setGroupBy('album');
+        });
+
+        const state = useDownloadStore.getState();
+        expect(state.groupBy).toBe('album');
+      });
+
+      it('sets groupBy to default', () => {
+        useDownloadStore.setState({ groupBy: 'artist' });
+
+        act(() => {
+          useDownloadStore.getState().setGroupBy('default');
+        });
+
+        const state = useDownloadStore.getState();
+        expect(state.groupBy).toBe('default');
+      });
+    });
+
+    describe('setCreatePlaylist', () => {
+      it('sets createPlaylist to true', () => {
+        act(() => {
+          useDownloadStore.getState().setCreatePlaylist(true);
+        });
+
+        const state = useDownloadStore.getState();
+        expect(state.createPlaylist).toBe(true);
+      });
+
+      it('sets createPlaylist to false', () => {
+        useDownloadStore.setState({ createPlaylist: true });
+
+        act(() => {
+          useDownloadStore.getState().setCreatePlaylist(false);
+        });
+
+        const state = useDownloadStore.getState();
+        expect(state.createPlaylist).toBe(false);
+      });
+    });
+
+    describe('setPlaylistName', () => {
+      it('sets custom playlist name', () => {
+        act(() => {
+          useDownloadStore.getState().setPlaylistName('My Custom Playlist');
+        });
+
+        const state = useDownloadStore.getState();
+        expect(state.playlistName).toBe('My Custom Playlist');
+      });
+    });
+
+    describe('initializeSelectionFromPlaylist', () => {
+      it('selects all videos when playlist preview is set', () => {
+        useDownloadStore.setState({
+          currentPlaylistPreview: {
+            id: 'playlist1',
+            title: 'Test Playlist',
+            channel: 'Test Channel',
+            videoCount: 3,
+            videos: mockPlaylistVideos,
+          },
+        });
+
+        act(() => {
+          useDownloadStore.getState().initializeSelectionFromPlaylist();
+        });
+
+        const state = useDownloadStore.getState();
+        expect(state.selectedVideoIds.size).toBe(3);
+        expect(state.playlistName).toBe('Test Playlist');
+      });
+    });
+
+    describe('startPlaylistDownload with selection', () => {
+      it('passes selected video IDs to API', async () => {
+        vi.mocked(apiClient.downloads.startPlaylist).mockResolvedValue({
+          success: true,
+          data: {
+            playlistId: 'playlist1',
+            playlistTitle: 'Test Playlist',
+            totalVideos: 3,
+            skipped: 0,
+            downloads: [mockDownload],
+          },
+        });
+
+        useDownloadStore.setState({
+          selectedVideoIds: new Set(['vid1', 'vid3']),
+          createPlaylist: true,
+          playlistName: 'My Playlist',
+        });
+
+        await act(async () => {
+          await useDownloadStore.getState().startPlaylistDownload(
+            'https://youtube.com/playlist?list=PLxyz123'
+          );
+        });
+
+        expect(apiClient.downloads.startPlaylist).toHaveBeenCalledWith(
+          'https://youtube.com/playlist?list=PLxyz123',
+          {
+            videoIds: expect.arrayContaining(['vid1', 'vid3']),
+            createPlaylist: true,
+            playlistName: 'My Playlist',
+          }
+        );
+      });
+
+      it('resets selection state after successful download', async () => {
+        vi.mocked(apiClient.downloads.startPlaylist).mockResolvedValue({
+          success: true,
+          data: {
+            playlistId: 'playlist1',
+            playlistTitle: 'Test Playlist',
+            totalVideos: 3,
+            skipped: 0,
+            downloads: [mockDownload],
+          },
+        });
+
+        useDownloadStore.setState({
+          selectedVideoIds: new Set(['vid1', 'vid2']),
+          createPlaylist: true,
+          playlistName: 'Custom Name',
+        });
+
+        await act(async () => {
+          await useDownloadStore.getState().startPlaylistDownload(
+            'https://youtube.com/playlist?list=PLxyz123'
+          );
+        });
+
+        const state = useDownloadStore.getState();
+        expect(state.selectedVideoIds.size).toBe(0);
+        expect(state.createPlaylist).toBe(false);
+        expect(state.playlistName).toBe('');
+        expect(state.currentPlaylistPreview).toBeNull();
       });
     });
   });

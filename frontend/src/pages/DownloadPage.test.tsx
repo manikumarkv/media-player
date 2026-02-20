@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { DownloadPage } from './DownloadPage';
-import { useDownloadStore, type Download, type VideoInfo } from '../stores/downloadStore';
+import { useDownloadStore, type Download, type VideoInfo, type PlaylistInfo } from '../stores/downloadStore';
 
 // Mock useSocket to prevent actual socket connections
 vi.mock('../hooks/useSocket', () => ({
@@ -48,14 +48,35 @@ const mockVideoInfo: VideoInfo = {
   channel: 'Test Channel',
 };
 
+const mockPlaylistInfo: PlaylistInfo = {
+  id: 'playlist-123',
+  title: 'Test Playlist Title',
+  channel: 'Test Channel',
+  videoCount: 3,
+  videos: [
+    { id: 'vid1', title: 'Video 1', duration: 180, thumbnail: 'thumb1.jpg' },
+    { id: 'vid2', title: 'Video 2', duration: 240, thumbnail: 'thumb2.jpg' },
+    { id: 'vid3', title: 'Video 3', duration: 300, thumbnail: 'thumb3.jpg' },
+  ],
+};
+
 describe('DownloadPage', () => {
   const mockFetchDownloads = vi.fn();
   const mockGetVideoInfo = vi.fn();
+  const mockGetPlaylistInfo = vi.fn();
   const mockStartDownload = vi.fn();
+  const mockStartPlaylistDownload = vi.fn();
   const mockCancelDownload = vi.fn();
   const mockRetryDownload = vi.fn();
   const mockDeleteDownload = vi.fn();
   const mockClearPreview = vi.fn();
+  const mockToggleVideoSelection = vi.fn();
+  const mockSelectAllVideos = vi.fn();
+  const mockSelectNoneVideos = vi.fn();
+  const mockSetGroupBy = vi.fn();
+  const mockSetCreatePlaylist = vi.fn();
+  const mockSetPlaylistName = vi.fn();
+  const mockInitializeSelectionFromPlaylist = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -63,16 +84,31 @@ describe('DownloadPage', () => {
     useDownloadStore.setState({
       downloads: [],
       currentPreview: null,
+      currentPlaylistPreview: null,
       isLoading: false,
       isLoadingPreview: false,
+      isLoadingPlaylistPreview: false,
       error: null,
+      selectedVideoIds: new Set<string>(),
+      groupBy: 'default',
+      createPlaylist: false,
+      playlistName: '',
       fetchDownloads: mockFetchDownloads,
       getVideoInfo: mockGetVideoInfo,
+      getPlaylistInfo: mockGetPlaylistInfo,
       startDownload: mockStartDownload,
+      startPlaylistDownload: mockStartPlaylistDownload,
       cancelDownload: mockCancelDownload,
       retryDownload: mockRetryDownload,
       deleteDownload: mockDeleteDownload,
       clearPreview: mockClearPreview,
+      toggleVideoSelection: mockToggleVideoSelection,
+      selectAllVideos: mockSelectAllVideos,
+      selectNoneVideos: mockSelectNoneVideos,
+      setGroupBy: mockSetGroupBy,
+      setCreatePlaylist: mockSetCreatePlaylist,
+      setPlaylistName: mockSetPlaylistName,
+      initializeSelectionFromPlaylist: mockInitializeSelectionFromPlaylist,
       handleDownloadStarted: vi.fn(),
       handleDownloadProgress: vi.fn(),
       handleDownloadCompleted: vi.fn(),
@@ -349,6 +385,139 @@ describe('DownloadPage', () => {
       render(<DownloadPage />);
 
       expect(screen.getByText('Something went wrong')).toBeInTheDocument();
+    });
+  });
+
+  describe('playlist selection', () => {
+    beforeEach(() => {
+      useDownloadStore.setState({
+        currentPlaylistPreview: mockPlaylistInfo,
+        selectedVideoIds: new Set(['vid1', 'vid2', 'vid3']),
+      });
+    });
+
+    it('displays playlist preview with checkboxes', () => {
+      render(<DownloadPage />);
+
+      expect(screen.getByText('Test Playlist Title')).toBeInTheDocument();
+      expect(screen.getByText('Video 1')).toBeInTheDocument();
+      expect(screen.getByText('Video 2')).toBeInTheDocument();
+      expect(screen.getByText('Video 3')).toBeInTheDocument();
+    });
+
+    it('displays Select All and Select None buttons', () => {
+      render(<DownloadPage />);
+
+      expect(screen.getByRole('button', { name: /select all/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /select none/i })).toBeInTheDocument();
+    });
+
+    it('calls selectAllVideos when Select All is clicked', async () => {
+      const user = userEvent.setup();
+      render(<DownloadPage />);
+
+      await user.click(screen.getByRole('button', { name: /select all/i }));
+
+      expect(mockSelectAllVideos).toHaveBeenCalled();
+    });
+
+    it('calls selectNoneVideos when Select None is clicked', async () => {
+      const user = userEvent.setup();
+      render(<DownloadPage />);
+
+      await user.click(screen.getByRole('button', { name: /select none/i }));
+
+      expect(mockSelectNoneVideos).toHaveBeenCalled();
+    });
+
+    it('calls toggleVideoSelection when video checkbox is clicked', async () => {
+      const user = userEvent.setup();
+      render(<DownloadPage />);
+
+      const checkboxes = screen.getAllByRole('checkbox', { name: /select video/i });
+      await user.click(checkboxes[0]);
+
+      expect(mockToggleVideoSelection).toHaveBeenCalledWith('vid1');
+    });
+
+    it('displays download button with selected count', () => {
+      useDownloadStore.setState({
+        currentPlaylistPreview: mockPlaylistInfo,
+        selectedVideoIds: new Set(['vid1', 'vid2']),
+      });
+      render(<DownloadPage />);
+
+      expect(screen.getByRole('button', { name: /download.*2.*3/i })).toBeInTheDocument();
+    });
+
+    it('disables download button when no videos selected', () => {
+      useDownloadStore.setState({
+        currentPlaylistPreview: mockPlaylistInfo,
+        selectedVideoIds: new Set(),
+      });
+      render(<DownloadPage />);
+
+      const downloadButton = screen.getByRole('button', { name: /download playlist/i });
+      expect(downloadButton).toBeDisabled();
+    });
+
+    it('displays create playlist checkbox', () => {
+      render(<DownloadPage />);
+
+      expect(screen.getByRole('checkbox', { name: /create playlist/i })).toBeInTheDocument();
+    });
+
+    it('calls setCreatePlaylist when create playlist checkbox is clicked', async () => {
+      const user = userEvent.setup();
+      render(<DownloadPage />);
+
+      await user.click(screen.getByRole('checkbox', { name: /create playlist/i }));
+
+      expect(mockSetCreatePlaylist).toHaveBeenCalledWith(true);
+    });
+
+    it('displays playlist name input when create playlist is checked', () => {
+      useDownloadStore.setState({
+        currentPlaylistPreview: mockPlaylistInfo,
+        selectedVideoIds: new Set(['vid1']),
+        createPlaylist: true,
+        playlistName: 'Test Playlist Title',
+      });
+      render(<DownloadPage />);
+
+      expect(screen.getByDisplayValue('Test Playlist Title')).toBeInTheDocument();
+    });
+
+    it('calls setPlaylistName when playlist name is changed', async () => {
+      const user = userEvent.setup();
+      useDownloadStore.setState({
+        currentPlaylistPreview: mockPlaylistInfo,
+        selectedVideoIds: new Set(['vid1']),
+        createPlaylist: true,
+        playlistName: '',
+      });
+      render(<DownloadPage />);
+
+      const input = screen.getByPlaceholderText(/playlist name/i);
+      await user.type(input, 'My Custom Playlist');
+
+      expect(mockSetPlaylistName).toHaveBeenCalled();
+    });
+
+    it('displays grouping dropdown', () => {
+      render(<DownloadPage />);
+
+      expect(screen.getByRole('combobox', { name: /group by/i })).toBeInTheDocument();
+    });
+
+    it('calls setGroupBy when grouping option is changed', async () => {
+      const user = userEvent.setup();
+      render(<DownloadPage />);
+
+      const dropdown = screen.getByRole('combobox', { name: /group by/i });
+      await user.selectOptions(dropdown, 'artist');
+
+      expect(mockSetGroupBy).toHaveBeenCalledWith('artist');
     });
   });
 });

@@ -44,7 +44,10 @@ export interface PlaylistDownloadResult {
   totalVideos: number;
   skipped: number;
   downloads: Download[];
+  createdPlaylistId?: string;
 }
+
+export type GroupBy = 'default' | 'artist' | 'album';
 
 interface DownloadState {
   downloads: Download[];
@@ -54,6 +57,12 @@ interface DownloadState {
   isLoadingPreview: boolean;
   isLoadingPlaylistPreview: boolean;
   error: string | null;
+
+  // Playlist selection state
+  selectedVideoIds: Set<string>;
+  groupBy: GroupBy;
+  createPlaylist: boolean;
+  playlistName: string;
 
   // Actions
   fetchDownloads: () => Promise<void>;
@@ -66,6 +75,15 @@ interface DownloadState {
   deleteDownload: (id: string) => Promise<void>;
   clearPreview: () => void;
 
+  // Playlist selection actions
+  toggleVideoSelection: (videoId: string) => void;
+  selectAllVideos: () => void;
+  selectNoneVideos: () => void;
+  setGroupBy: (groupBy: GroupBy) => void;
+  setCreatePlaylist: (value: boolean) => void;
+  setPlaylistName: (name: string) => void;
+  initializeSelectionFromPlaylist: () => void;
+
   // Socket event handlers
   handleDownloadStarted: (data: { downloadId: string; title: string }) => void;
   handleDownloadProgress: (data: { downloadId: string; progress: number }) => void;
@@ -74,7 +92,7 @@ interface DownloadState {
   handleDownloadCancelled: (data: { downloadId: string }) => void;
 }
 
-export const useDownloadStore = create<DownloadState>((set) => ({
+export const useDownloadStore = create<DownloadState>((set, get) => ({
   downloads: [],
   currentPreview: null,
   currentPlaylistPreview: null,
@@ -82,6 +100,12 @@ export const useDownloadStore = create<DownloadState>((set) => ({
   isLoadingPreview: false,
   isLoadingPlaylistPreview: false,
   error: null,
+
+  // Playlist selection state
+  selectedVideoIds: new Set<string>(),
+  groupBy: 'default' as GroupBy,
+  createPlaylist: false,
+  playlistName: '',
 
   fetchDownloads: async () => {
     set({ isLoading: true, error: null });
@@ -155,13 +179,22 @@ export const useDownloadStore = create<DownloadState>((set) => ({
   },
 
   startPlaylistDownload: async (url: string) => {
+    const { selectedVideoIds, createPlaylist, playlistName } = get();
     set({ error: null });
     try {
-      const response = await apiClient.downloads.startPlaylist(url);
+      const response = await apiClient.downloads.startPlaylist(url, {
+        videoIds: selectedVideoIds.size > 0 ? Array.from(selectedVideoIds) : undefined,
+        createPlaylist,
+        playlistName: playlistName || undefined,
+      });
       const result = response.data;
       set((state) => ({
         downloads: [...result.downloads, ...state.downloads],
         currentPlaylistPreview: null,
+        // Reset selection state after successful download
+        selectedVideoIds: new Set<string>(),
+        createPlaylist: false,
+        playlistName: '',
       }));
       return result;
     } catch (error) {
@@ -219,7 +252,67 @@ export const useDownloadStore = create<DownloadState>((set) => ({
   },
 
   clearPreview: () => {
-    set({ currentPreview: null, currentPlaylistPreview: null, error: null });
+    set({
+      currentPreview: null,
+      currentPlaylistPreview: null,
+      error: null,
+      selectedVideoIds: new Set<string>(),
+      groupBy: 'default',
+      createPlaylist: false,
+      playlistName: '',
+    });
+  },
+
+  // Playlist selection actions
+  toggleVideoSelection: (videoId: string) => {
+    set((state) => {
+      const newSelected = new Set(state.selectedVideoIds);
+      if (newSelected.has(videoId)) {
+        newSelected.delete(videoId);
+      } else {
+        newSelected.add(videoId);
+      }
+      return { selectedVideoIds: newSelected };
+    });
+  },
+
+  selectAllVideos: () => {
+    const { currentPlaylistPreview } = get();
+    if (!currentPlaylistPreview) {
+      return;
+    }
+
+    const allVideoIds = new Set(currentPlaylistPreview.videos.map((v) => v.id));
+    set({ selectedVideoIds: allVideoIds });
+  },
+
+  selectNoneVideos: () => {
+    set({ selectedVideoIds: new Set<string>() });
+  },
+
+  setGroupBy: (groupBy: GroupBy) => {
+    set({ groupBy });
+  },
+
+  setCreatePlaylist: (value: boolean) => {
+    set({ createPlaylist: value });
+  },
+
+  setPlaylistName: (name: string) => {
+    set({ playlistName: name });
+  },
+
+  initializeSelectionFromPlaylist: () => {
+    const { currentPlaylistPreview } = get();
+    if (!currentPlaylistPreview) {
+      return;
+    }
+
+    const allVideoIds = new Set(currentPlaylistPreview.videos.map((v) => v.id));
+    set({
+      selectedVideoIds: allVideoIds,
+      playlistName: currentPlaylistPreview.title,
+    });
   },
 
   // Socket event handlers

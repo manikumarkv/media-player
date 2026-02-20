@@ -7,6 +7,7 @@ import {
   startDownloadSchema,
   getInfoSchema,
   playlistUrlSchema,
+  playlistStartSchema,
 } from '../validation/download.schema.js';
 
 const router: IRouter = Router();
@@ -72,10 +73,10 @@ router.post(
   downloadController.getPlaylistInfo
 );
 
-// POST /downloads/playlist/start - Start downloading a playlist
+// POST /downloads/playlist/start - Start downloading a playlist (with optional selection)
 router.post(
   ROUTES.DOWNLOADS.PLAYLIST_START,
-  validate(playlistUrlSchema, 'body'),
+  validate(playlistStartSchema, 'body'),
   downloadController.startPlaylist
 );
 

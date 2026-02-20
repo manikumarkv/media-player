@@ -4,6 +4,7 @@ import {
   type StartDownloadInput,
   type GetInfoInput,
   type PlaylistUrlInput,
+  type PlaylistStartInput,
 } from '../validation/download.schema.js';
 
 export const downloadController = {
@@ -52,9 +53,14 @@ export const downloadController = {
     next: NextFunction
   ): Promise<void> {
     try {
+      console.log('=== DOWNLOAD START REQUEST ===');
+      console.log('URL:', req.body.url);
       const download = await downloadService.start(req.body.url);
+      console.log('Download started successfully:', download.id);
       res.status(201).json({ success: true, data: download });
     } catch (error) {
+      console.error('=== DOWNLOAD START ERROR ===');
+      console.error('Error:', error);
       next(error);
     }
   },
@@ -151,12 +157,17 @@ export const downloadController = {
   },
 
   async startPlaylist(
-    req: Request<unknown, unknown, PlaylistUrlInput>,
+    req: Request<unknown, unknown, PlaylistStartInput>,
     res: Response,
     next: NextFunction
   ): Promise<void> {
     try {
-      const result = await downloadService.startPlaylist(req.body.url);
+      const { url, videoIds, createPlaylist, playlistName } = req.body;
+      const result = await downloadService.startPlaylist(url, {
+        videoIds,
+        createPlaylist,
+        playlistName,
+      });
       res.status(201).json({ success: true, data: result });
     } catch (error) {
       next(error);
