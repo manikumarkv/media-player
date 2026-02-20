@@ -4,6 +4,25 @@ import fs from 'fs';
 import { config } from '../config/database.js';
 import { BadRequestError } from '../errors/index.js';
 
+// Dynamic yt-dlp path - can be overridden for Electron bundled binary
+let ytDlpPath = process.env.YT_DLP_PATH ?? 'yt-dlp';
+
+/**
+ * Set the path to yt-dlp binary
+ * Used by Electron to point to bundled binary
+ */
+export function setYtDlpPath(newPath: string): void {
+  ytDlpPath = newPath;
+  console.log(`yt-dlp path set to: ${ytDlpPath}`);
+}
+
+/**
+ * Get the current yt-dlp path
+ */
+export function getYtDlpPath(): string {
+  return ytDlpPath;
+}
+
 export interface VideoInfo {
   id: string;
   title: string;
@@ -12,6 +31,46 @@ export interface VideoInfo {
   channel: string;
   uploadDate: string;
   description: string;
+  // Rich metadata from YouTube Music
+  artist: string | null;
+  album: string | null;
+  releaseYear: number | null;
+}
+
+/**
+ * Parse release year from yt-dlp metadata fields
+ * Priority: release_year > release_date > upload_date
+ */
+export function parseReleaseYear(
+  releaseYear: string | number | null | undefined,
+  releaseDate: string | null | undefined,
+  uploadDate: string | null | undefined
+): number | null {
+  // Try release_year first (can be number or string)
+  if (releaseYear !== null && releaseYear !== undefined && releaseYear !== '') {
+    const year = typeof releaseYear === 'number' ? releaseYear : parseInt(releaseYear, 10);
+    if (!isNaN(year) && year > 1900 && year < 2100) {
+      return year;
+    }
+  }
+
+  // Try release_date (YYYYMMDD format)
+  if (releaseDate && typeof releaseDate === 'string' && releaseDate.length >= 4) {
+    const year = parseInt(releaseDate.substring(0, 4), 10);
+    if (!isNaN(year) && year > 1900 && year < 2100) {
+      return year;
+    }
+  }
+
+  // Fall back to upload_date (YYYYMMDD format)
+  if (uploadDate && typeof uploadDate === 'string' && uploadDate.length >= 4) {
+    const year = parseInt(uploadDate.substring(0, 4), 10);
+    if (!isNaN(year) && year > 1900 && year < 2100) {
+      return year;
+    }
+  }
+
+  return null;
 }
 
 export interface PlaylistVideoInfo {
@@ -54,9 +113,9 @@ export const youtubeService = {
    */
   async getVideoInfo(url: string): Promise<VideoInfo> {
     return new Promise((resolve, reject) => {
-      const args = ['--dump-json', '--no-playlist', '--js-runtimes', 'node', url];
+      const args = ['--force-ipv4', '--dump-json', '--no-playlist', '--js-runtimes', 'node', url];
 
-      const process = spawn('yt-dlp', args);
+      const process = spawn(ytDlpPath, args);
       let stdout = '';
       let stderr = '';
 
@@ -83,7 +142,27 @@ export const youtubeService = {
             channel: string;
             upload_date: string;
             description: string;
+            // YouTube Music metadata fields
+            artist?: string;
+            creator?: string;
+            album?: string;
+            release_year?: string | number;
+            release_date?: string;
           };
+
+          // Extract artist: prefer 'artist' field, fall back to 'creator', then 'channel'
+          const artist = info.artist ?? info.creator ?? null;
+
+          // Extract album (only available on YouTube Music)
+          const album = info.album ?? null;
+
+          // Extract release year with fallback chain
+          const releaseYear = parseReleaseYear(
+            info.release_year,
+            info.release_date,
+            info.upload_date
+          );
+
           resolve({
             id: info.id,
             title: info.title,
@@ -92,6 +171,9 @@ export const youtubeService = {
             channel: info.channel,
             uploadDate: info.upload_date,
             description: info.description,
+            artist,
+            album,
+            releaseYear,
           });
         } catch {
           reject(new BadRequestError('Failed to parse video info'));
@@ -129,21 +211,18 @@ export const youtubeService = {
       .substring(0, 200);
 
     const outputTemplate = path.join(outputDir, `${sanitizedTitle}.%(ext)s`);
-    const thumbnailPath = path.join(outputDir, `${sanitizedTitle}.jpg`);
 
-    // Use opus format (YouTube's native audio) to avoid quality loss from transcoding
-    // opus provides better quality at lower bitrates than mp3
+    // Download best audio format directly without ffmpeg conversion
+    // This works in standalone Electron without requiring ffmpeg
     const args = [
+      '--force-ipv4', // Force IPv4 to avoid IPv6 issues in Docker containers
       '--js-runtimes',
       'node', // Use Node.js for YouTube JS extraction
       '--no-playlist', // Only download single video, not playlist
-      '-x', // Extract audio (implies -f bestaudio)
-      '--audio-format',
-      'opus', // Keep as opus (YouTube's native format) - no transcoding loss
+      '-f',
+      'bestaudio', // Download best audio stream directly (no ffmpeg needed)
       '--embed-metadata',
       '--write-thumbnail',
-      '--convert-thumbnails',
-      'jpg',
       '--output',
       outputTemplate,
       '--newline',
@@ -152,7 +231,7 @@ export const youtubeService = {
     ];
 
     return new Promise((resolve, reject) => {
-      const process = spawn('yt-dlp', args);
+      const process = spawn(ytDlpPath, args);
       activeDownloads.set(downloadId, process);
 
       let stderrData = '';
@@ -196,9 +275,12 @@ export const youtubeService = {
           return;
         }
 
-        // Find the actual output file (opus format)
+        // Find the actual output file (could be opus, webm, m4a depending on source)
         const files = fs.readdirSync(outputDir);
-        const audioFile = files.find((f) => f.startsWith(sanitizedTitle) && f.endsWith('.opus'));
+        const audioExtensions = ['.opus', '.webm', '.m4a', '.ogg', '.mp3'];
+        const audioFile = files.find(
+          (f) => f.startsWith(sanitizedTitle) && audioExtensions.some((ext) => f.endsWith(ext))
+        );
 
         if (!audioFile) {
           reject(new BadRequestError('Output file not found'));
@@ -206,7 +288,11 @@ export const youtubeService = {
         }
 
         const filePath = path.join(outputDir, audioFile);
-        const actualThumbnailPath = fs.existsSync(thumbnailPath) ? thumbnailPath : undefined;
+        // Thumbnail could be webp or jpg depending on source
+        const thumbnailFile = files.find(
+          (f) => f.startsWith(sanitizedTitle) && (f.endsWith('.webp') || f.endsWith('.jpg'))
+        );
+        const actualThumbnailPath = thumbnailFile ? path.join(outputDir, thumbnailFile) : undefined;
 
         resolve({
           filePath,
@@ -240,7 +326,7 @@ export const youtubeService = {
    */
   async isAvailable(): Promise<boolean> {
     return new Promise((resolve) => {
-      const process = spawn('yt-dlp', ['--version']);
+      const process = spawn(ytDlpPath, ['--version']);
 
       process.on('close', (code) => {
         resolve(code === 0);
@@ -290,6 +376,7 @@ export const youtubeService = {
       /^(https?:\/\/)?(www\.)?youtube\.com\/playlist\?list=[\w-]+/,
       /^(https?:\/\/)?(www\.)?youtube\.com\/watch\?.*list=[\w-]+/,
       /^(https?:\/\/)?music\.youtube\.com\/playlist\?list=[\w-]+/,
+      /^(https?:\/\/)?music\.youtube\.com\/watch\?.*list=[\w-]+/,
     ];
 
     return patterns.some((pattern) => pattern.test(url));
@@ -320,9 +407,16 @@ export const youtubeService = {
     const normalizedUrl = this.normalizeUrl(url);
 
     return new Promise((resolve, reject) => {
-      const args = ['--dump-json', '--flat-playlist', '--js-runtimes', 'node', normalizedUrl];
+      const args = [
+        '--force-ipv4',
+        '--dump-json',
+        '--flat-playlist',
+        '--js-runtimes',
+        'node',
+        normalizedUrl,
+      ];
 
-      const process = spawn('yt-dlp', args);
+      const process = spawn(ytDlpPath, args);
       let stdout = '';
       let stderr = '';
 
