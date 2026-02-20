@@ -598,6 +598,161 @@
   margin: 0;
 }
 
+/* Playlist Selection Controls */
+.playlist-selection-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid #282828;
+  margin-bottom: 12px;
+}
+
+.selection-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.selection-button {
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid #535353;
+  color: #b3b3b3;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.selection-button:hover {
+  border-color: #fff;
+  color: #fff;
+}
+
+.grouping-dropdown select {
+  padding: 6px 12px;
+  background: #282828;
+  border: 1px solid #535353;
+  color: #b3b3b3;
+  font-size: 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.grouping-dropdown select:hover,
+.grouping-dropdown select:focus {
+  border-color: #fff;
+  outline: none;
+}
+
+/* Video Group Title */
+.video-group-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  margin: 12px 0 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #282828;
+}
+
+/* Selectable Video Item */
+.playlist-video-item.selectable {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 8px;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.playlist-video-item.selectable:hover {
+  background: #282828;
+}
+
+.video-checkbox {
+  width: 18px;
+  height: 18px;
+  accent-color: #1db954;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* Playlist Creation Option */
+.playlist-creation-option {
+  padding: 16px 0;
+  border-top: 1px solid #282828;
+  margin-top: 12px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #b3b3b3;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #1db954;
+  cursor: pointer;
+}
+
+.checkbox-label span {
+  user-select: none;
+}
+
+.checkbox-label:hover span {
+  color: #fff;
+}
+
+.playlist-name-input {
+  margin-top: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  background: #282828;
+  border: 1px solid #535353;
+  color: #fff;
+  font-size: 14px;
+  border-radius: 4px;
+  transition: border-color 0.2s ease;
+}
+
+.playlist-name-input:focus {
+  border-color: #1db954;
+  outline: none;
+}
+
+.playlist-name-input::placeholder {
+  color: #727272;
+}
+
+/* Playlist Download Button */
+.playlist-download-button {
+  margin-top: 16px;
+  width: 100%;
+  justify-content: center;
+}
+
+/* Screen reader only utility */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* Downloads List */
 .downloads-section {
   margin-top: 32px;

@@ -4,7 +4,9 @@
       "@prisma/client",
       "@prisma/engines",
       "prisma",
-      "esbuild"
+      "esbuild",
+      "electron",
+      "better-sqlite3"
     ],
     "allowedDeprecatedVersions": {}
   },
@@ -29,7 +31,14 @@
     "format:check": "prettier --check .",
     "test": "pnpm -r test",
     "test:coverage": "pnpm -r test:coverage",
-    "type-check": "pnpm -r type-check"
+    "type-check": "pnpm -r type-check",
+    "electron:dev": "pnpm --filter music-player-desktop dev",
+    "electron:build": "pnpm --filter music-player-desktop build",
+    "electron:package": "pnpm --filter music-player-desktop package",
+    "electron:package:mac": "pnpm --filter music-player-desktop package:mac",
+    "electron:package:win": "pnpm --filter music-player-desktop package:win",
+    "electron:package:linux": "pnpm --filter music-player-desktop package:linux",
+    "electron:package:all": "pnpm --filter music-player-desktop package:all"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.3.0",

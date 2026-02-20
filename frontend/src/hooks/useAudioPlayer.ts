@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { usePlayerStore, type Track } from '../stores/playerStore';
 import { ENDPOINTS } from '@media-player/shared';
+import { getMediaUrl } from '../utils/electron';
 
 // Duration for fade effects in milliseconds
 const FADE_DURATION = 150;
@@ -109,9 +110,8 @@ export function useAudioPlayer() {
     const audio = getAudioElement();
 
     if (currentTrack) {
-      const streamUrl = ENDPOINTS.media.stream(currentTrack.id);
-      // Compare using endsWith since audio.src is absolute and streamUrl is relative
-      if (!audio.src.endsWith(streamUrl)) {
+      const streamUrl = getMediaUrl(ENDPOINTS.media.stream(currentTrack.id));
+      if (audio.src !== streamUrl) {
         audio.src = streamUrl;
         audio.load();
       }

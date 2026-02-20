@@ -1,7 +1,12 @@
 import axios, { type AxiosInstance, type AxiosError } from 'axios';
 import { ENDPOINTS } from '@media-player/shared';
+import { isElectron } from '../utils/electron';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+// In Electron, connect to the local backend server
+// In browser/Docker, use the environment variable or empty (same-origin)
+const API_BASE_URL = isElectron()
+  ? 'http://localhost:3000'
+  : (import.meta.env.VITE_API_URL || '');
 
 // Types
 export interface Media {
@@ -90,6 +95,13 @@ export interface PlaylistDownloadResult {
   totalVideos: number;
   skipped: number;
   downloads: Download[];
+  createdPlaylistId?: string;
+}
+
+export interface PlaylistDownloadOptions {
+  videoIds?: string[];
+  createPlaylist?: boolean;
+  playlistName?: string;
 }
 
 export interface YouTubeSyncStatus {
@@ -392,7 +404,8 @@ class ApiClient {
     start: async (url: string): Promise<ApiResponse<unknown>> => {
       const response = await this.client.post<ApiResponse<unknown>>(
         ENDPOINTS.downloads.start(),
-        { url }
+        { url },
+        { timeout: 120000 } // 2 minutes - yt-dlp needs time to fetch video info
       );
       return response.data;
     },
@@ -400,15 +413,20 @@ class ApiClient {
     getPlaylistInfo: async (url: string): Promise<ApiResponse<PlaylistInfo>> => {
       const response = await this.client.post<ApiResponse<PlaylistInfo>>(
         ENDPOINTS.downloads.playlistInfo(),
-        { url }
+        { url },
+        { timeout: 300000 } // 5 minutes - playlists can have many videos
       );
       return response.data;
     },
 
-    startPlaylist: async (url: string): Promise<ApiResponse<PlaylistDownloadResult>> => {
+    startPlaylist: async (
+      url: string,
+      options?: PlaylistDownloadOptions
+    ): Promise<ApiResponse<PlaylistDownloadResult>> => {
       const response = await this.client.post<ApiResponse<PlaylistDownloadResult>>(
         ENDPOINTS.downloads.playlistStart(),
-        { url }
+        { url, ...options },
+        { timeout: 300000 } // 5 minutes - playlists can have many videos
       );
       return response.data;
     },

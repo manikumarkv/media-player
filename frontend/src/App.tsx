@@ -14,7 +14,17 @@ import { DownloadPage } from './pages/DownloadPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { DisclaimerPage } from './pages/DisclaimerPage';
 import { LegalConsent } from './utils/legal';
+import { isElectron, getPlatform } from './utils/electron';
 import './styles/global.css';
+
+// Add Electron classes immediately on module load (before React renders)
+// This ensures CSS rules apply from the first paint
+if (isElectron()) {
+  const platform = getPlatform();
+  document.body.classList.add('electron');
+  document.body.classList.add(`platform-${platform}`);
+  console.log('[Electron] Added body classes: electron, platform-' + platform);
+}
 
 export function App() {
   const [hasAcceptedTerms, setHasAcceptedTerms] = useState(() => LegalConsent.hasAccepted());

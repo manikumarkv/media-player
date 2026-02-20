@@ -1,5 +1,6 @@
 import { usePlayerStore } from '../../stores/playerStore';
 import { ENDPOINTS } from '@media-player/shared';
+import { getMediaUrl } from '../../utils/electron';
 import { MusicNoteIcon } from '../Icons';
 import './Player.css';
 
@@ -21,7 +22,7 @@ export function NowPlaying() {
   }
 
   const thumbnailUrl = currentTrack.thumbnailPath
-    ? ENDPOINTS.media.thumbnail(currentTrack.id)
+    ? getMediaUrl(ENDPOINTS.media.thumbnail(currentTrack.id))
     : null;
 
   return (

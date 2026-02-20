@@ -1,0 +1,132 @@
+appId: com.musicplayer.app
+productName: Music Player
+copyright: Copyright (c) 2024
+
+directories:
+  output: release
+  buildResources: resources
+
+files:
+  - dist/**/*
+  - "!node_modules/**/*"
+  # better-sqlite3 native module
+  - node_modules/better-sqlite3/**/*
+  - node_modules/bindings/**/*
+  - node_modules/prebuild-install/**/*
+  - node_modules/file-uri-to-path/**/*
+  # electron-updater and its dependencies
+  - node_modules/electron-updater/**/*
+  - node_modules/fs-extra/**/*
+  - node_modules/graceful-fs/**/*
+  - node_modules/jsonfile/**/*
+  - node_modules/universalify/**/*
+  - node_modules/js-yaml/**/*
+  - node_modules/argparse/**/*
+  - node_modules/lazy-val/**/*
+  - node_modules/lodash.escaperegexp/**/*
+  - node_modules/lodash.isequal/**/*
+  - node_modules/semver/**/*
+  - node_modules/tiny-typed-emitter/**/*
+  - node_modules/builder-util-runtime/**/*
+  - node_modules/sax/**/*
+  - node_modules/debug/**/*
+  - node_modules/ms/**/*
+  # electron-store and its dependencies
+  - node_modules/electron-store/**/*
+  - node_modules/conf/**/*
+  - node_modules/atomically/**/*
+  - node_modules/dot-prop/**/*
+  - node_modules/env-paths/**/*
+  - node_modules/json-schema-typed/**/*
+  - node_modules/type-fest/**/*
+  - node_modules/ajv/**/*
+  - node_modules/ajv-formats/**/*
+
+extraResources:
+  # Include yt-dlp binary for current platform
+  - from: resources/binaries/${platform}-${arch}/
+    to: binaries/
+    filter:
+      - "**/*"
+  # Include bundled backend (CJS format for Electron compatibility)
+  - from: dist/backend/
+    to: backend/
+    filter:
+      - "**/*"
+  # Include frontend dist
+  - from: ../frontend/dist/
+    to: frontend/
+    filter:
+      - "**/*"
+
+asar: true
+asarUnpack:
+  - resources/binaries/**/*
+  - backend/**/*
+
+mac:
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
+  icon: resources/icons/icon.icns
+  category: public.app-category.music
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+
+dmg:
+  contents:
+    - x: 130
+      y: 220
+    - x: 410
+      y: 220
+      type: link
+      path: /Applications
+  window:
+    width: 540
+    height: 380
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: resources/icons/icon.ico
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  deleteAppDataOnUninstall: false
+  installerIcon: resources/icons/icon.ico
+  uninstallerIcon: resources/icons/icon.ico
+  installerHeaderIcon: resources/icons/icon.ico
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: Music Player
+
+linux:
+  target:
+    - target: AppImage
+      arch:
+        - x64
+    - target: deb
+      arch:
+        - x64
+  icon: resources/icons
+  category: Audio
+  desktop:
+    Name: Music Player
+    Comment: Offline-first music player with YouTube download
+    Categories: Audio;Music;Player;
+    StartupNotify: "true"
+    MimeType: x-scheme-handler/music-player
+
+# Publish disabled for now - uncomment when ready for auto-updates
+# publish:
+#   provider: github
+#   owner: your-username
+#   repo: music-player

@@ -7,6 +7,18 @@
   padding: 0;
 }
 
+/* Electron macOS title bar safe area */
+:root {
+  --titlebar-height: 0px;
+}
+
+/* Detect Electron via user agent or environment */
+@supports (-webkit-app-region: drag) {
+  :root {
+    --titlebar-height: env(titlebar-area-height, 0px);
+  }
+}
+
 /* Root Variables */
 :root {
   --color-bg-base: #121212;

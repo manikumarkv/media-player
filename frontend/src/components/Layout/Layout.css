@@ -118,6 +118,36 @@
   background-clip: content-box;
 }
 
+/* Electron macOS - Add space for traffic lights (window buttons) */
+body.electron.platform-darwin .app-container {
+  padding-top: 38px; /* Space for macOS title bar area */
+}
+
+body.electron.platform-darwin .sidebar {
+  padding-top: 16px; /* Additional padding within sidebar */
+}
+
+/* Make the top area draggable for window movement on macOS */
+body.electron.platform-darwin .sidebar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 38px;
+  -webkit-app-region: drag;
+}
+
+body.electron.platform-darwin .sidebar {
+  position: relative;
+}
+
+/* Ensure interactive elements are not draggable */
+body.electron.platform-darwin .sidebar a,
+body.electron.platform-darwin .sidebar button {
+  -webkit-app-region: no-drag;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .sidebar {

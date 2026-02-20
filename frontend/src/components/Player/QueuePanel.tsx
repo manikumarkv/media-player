@@ -1,5 +1,6 @@
 import { usePlayerStore, type Track } from '../../stores/playerStore';
 import { ENDPOINTS } from '@media-player/shared';
+import { getMediaUrl } from '../../utils/electron';
 import { CloseIcon, MusicNoteIcon } from '../Icons';
 import './Player.css';
 
@@ -90,7 +91,7 @@ function QueueItem({ track, isCurrent, onRemove }: QueueItemProps) {
     play();
   };
 
-  const thumbnailUrl = track.thumbnailPath ? ENDPOINTS.media.thumbnail(track.id) : null;
+  const thumbnailUrl = track.thumbnailPath ? getMediaUrl(ENDPOINTS.media.thumbnail(track.id)) : null;
 
   return (
     <div

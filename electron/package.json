@@ -1,0 +1,39 @@
+{
+  "name": "music-player-desktop",
+  "version": "1.0.0",
+  "description": "Offline-first music player with YouTube download capability",
+  "main": "dist/main/index.js",
+  "author": "Music Player",
+  "license": "MIT",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "build:backend": "node scripts/bundle-backend.mjs",
+    "preview": "electron-vite preview",
+    "package": "pnpm run build && pnpm run build:backend && electron-builder --publish never",
+    "package:mac": "pnpm run build && pnpm run build:backend && electron-builder --mac --publish never",
+    "package:win": "pnpm run build && pnpm run build:backend && electron-builder --win --publish never",
+    "package:linux": "pnpm run build && pnpm run build:backend && electron-builder --linux --publish never",
+    "package:all": "pnpm run build && pnpm run build:backend && electron-builder -mwl --publish never",
+    "publish": "pnpm run build && pnpm run build:backend && electron-builder --publish always",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint src --ext .ts"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.6.2",
+    "electron-store": "^8.1.0",
+    "electron-updater": "^6.1.7",
+    "fs-extra": "^11.3.3"
+  },
+  "devDependencies": {
+    "@electron-toolkit/tsconfig": "^1.0.1",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^20.11.0",
+    "electron": "^28.2.0",
+    "electron-builder": "^24.9.1",
+    "electron-vite": "^2.0.0",
+    "esbuild": "^0.27.3",
+    "sharp": "^0.34.5",
+    "typescript": "^5.4.5"
+  }
+}
