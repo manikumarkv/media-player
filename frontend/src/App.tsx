@@ -10,7 +10,10 @@ import { LikedSongsPage } from './pages/LikedSongsPage';
 import { HistoryPage } from './pages/HistoryPage';
 import { PlaylistsPage } from './pages/PlaylistsPage';
 import { PlaylistDetailPage } from './pages/PlaylistDetailPage';
+import { AlbumsPage } from './pages/AlbumsPage';
+import { AlbumDetailPage } from './pages/AlbumDetailPage';
 import { DownloadPage } from './pages/DownloadPage';
+import { ExportPage } from './pages/ExportPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { DisclaimerPage } from './pages/DisclaimerPage';
 import { LegalConsent } from './utils/legal';
@@ -61,7 +64,10 @@ export function App() {
             <Route path="/history" element={<HistoryPage />} />
             <Route path="/playlists" element={<PlaylistsPage />} />
             <Route path="/playlists/:id" element={<PlaylistDetailPage />} />
+            <Route path="/albums" element={<AlbumsPage />} />
+            <Route path="/albums/:albumName" element={<AlbumDetailPage />} />
             <Route path="/download" element={<DownloadPage />} />
+            <Route path="/export" element={<ExportPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/disclaimer" element={<DisclaimerPage />} />
           </Routes>

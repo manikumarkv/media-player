@@ -5,3 +5,4 @@ export { historyController } from './history.controller.js';
 export { likesController } from './likes.controller.js';
 export { downloadController } from './download.controller.js';
 export { youtubeSyncController } from './youtube-sync.controller.js';
+export { exportController } from './export.controller.js';

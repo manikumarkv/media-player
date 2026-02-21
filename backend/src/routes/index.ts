@@ -6,6 +6,7 @@ import historyRoutes from './history.routes.js';
 import likesRoutes from './likes.routes.js';
 import downloadRoutes from './download.routes.js';
 import youtubeSyncRoutes from './youtube-sync.routes.js';
+import exportRoutes from './export.routes.js';
 
 export const router: RouterType = Router();
 
@@ -17,3 +18,4 @@ router.use(historyRoutes);
 router.use(likesRoutes);
 router.use(downloadRoutes);
 router.use(youtubeSyncRoutes);
+router.use(exportRoutes);

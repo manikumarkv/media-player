@@ -28,10 +28,12 @@ services:
       NODE_ENV: development
       FRONTEND_URL: http://localhost:5173
       MEDIA_PATH: /app/media
+      EXPORT_PATH: /app/export
     volumes:
       - ./backend/src:/app/backend/src
       - ./shared/src:/app/shared/src
-      - media_data:/app/media
+      - ./media:/app/media
+      - ./export:/app/export
     ports:
       - '3000:3000'
     depends_on:
@@ -57,4 +59,3 @@ services:
 
 volumes:
   postgres_data:
-  media_data:

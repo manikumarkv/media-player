@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { HomeIcon, LibraryIcon, DownloadIcon, HeartIcon, HistoryIcon, QueueIcon, SettingsIcon } from '../Icons';
+import { HomeIcon, LibraryIcon, DownloadIcon, ExportIcon, HeartIcon, HistoryIcon, QueueIcon, SettingsIcon, AlbumIcon } from '../Icons';
 import './Layout.css';
 
 export function Sidebar() {
@@ -35,6 +35,15 @@ export function Sidebar() {
               <span>Download</span>
             </NavLink>
           </li>
+          <li>
+            <NavLink
+              to="/export"
+              className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+            >
+              <ExportIcon size={24} />
+              <span>Export</span>
+            </NavLink>
+          </li>
         </ul>
       </nav>
 
@@ -67,6 +76,15 @@ export function Sidebar() {
             >
               <QueueIcon size={24} />
               <span>Playlists</span>
+            </NavLink>
+          </li>
+          <li>
+            <NavLink
+              to="/albums"
+              className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+            >
+              <AlbumIcon size={24} />
+              <span>Albums</span>
             </NavLink>
           </li>
         </ul>

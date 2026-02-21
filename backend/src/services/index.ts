@@ -7,3 +7,4 @@ export { socketService } from './socket.service.js';
 export { youtubeService } from './youtube.service.js';
 export { downloadService } from './download.service.js';
 export { youtubeSyncService } from './youtube-sync.service.js';
+export { exportService } from './export.service.js';

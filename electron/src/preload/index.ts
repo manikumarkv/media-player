@@ -51,6 +51,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   openFileLocation: (filePath: string): void => {
     ipcRenderer.send('open-file-location', filePath);
   },
+  selectFolder: (): Promise<string | null> => ipcRenderer.invoke('select-folder'),
 
   // Remove listeners (for cleanup)
   removeAllListeners: (channel: string): void => {
@@ -74,6 +75,7 @@ declare global {
       closeWindow: () => void;
       getMediaPath: () => Promise<string>;
       openFileLocation: (filePath: string) => void;
+      selectFolder: () => Promise<string | null>;
       removeAllListeners: (channel: string) => void;
     };
   }

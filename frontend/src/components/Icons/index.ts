@@ -33,7 +33,7 @@ export {
 } from 'lucide-react';
 
 // Media
-export { Music as MusicNoteIcon, Heart as HeartIcon } from 'lucide-react';
+export { Music as MusicNoteIcon, Heart as HeartIcon, Disc as AlbumIcon } from 'lucide-react';
 
 // Actions
 export {
@@ -55,6 +55,8 @@ export {
   Clock as HistoryIcon,
   Settings as SettingsIcon,
   ArrowLeft as ArrowLeftIcon,
+  FolderOutput as ExportIcon,
+  FolderOpen as FolderIcon,
 } from 'lucide-react';
 
 // Network Status

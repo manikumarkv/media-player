@@ -27,6 +27,14 @@ export interface Media {
   updatedAt: string;
 }
 
+export interface Album {
+  name: string;
+  artist: string | null;
+  trackCount: number;
+  totalDuration: number;
+  coverMediaId: string | null;
+}
+
 export interface Playlist {
   id: string;
   name: string;
@@ -87,6 +95,8 @@ export interface Download {
   mediaId: string | null;
   createdAt: string;
   updatedAt: string;
+  speed: string | null;
+  eta: string | null;
 }
 
 export interface PlaylistDownloadResult {
@@ -136,6 +146,41 @@ export interface YouTubeSyncResult {
   videosDownloaded: number;
   videosSkipped: number;
   videosFailed: number;
+}
+
+export type ExportMode = 'album' | 'artist' | 'playlist' | 'all';
+
+export interface ExportableItem {
+  id: string;
+  name: string;
+  artist?: string | null;
+  trackCount: number;
+  totalDuration?: number;
+  coverMediaId: string | null;
+}
+
+export interface ExportStatus {
+  mediaId: string;
+  title: string;
+  isExported: boolean;
+  exportPath: string | null;
+}
+
+export interface ExportResult {
+  totalExported: number;
+  totalSkipped: number;
+  exportedFiles: string[];
+}
+
+export interface ExportOptions {
+  destinationPath: string;
+  mode: ExportMode;
+  albumName?: string;
+  artistName?: string;
+  playlistId?: string;
+  mediaIds?: string[];
+  includeArtwork: boolean;
+  includeM3U: boolean;
 }
 
 export interface Pagination {
@@ -244,6 +289,20 @@ class ApiClient {
 
     delete: async (id: string): Promise<void> => {
       await this.client.delete(ENDPOINTS.media.delete(id));
+    },
+
+    albums: async (): Promise<ApiResponse<Album[]>> => {
+      const response = await this.client.get<ApiResponse<Album[]>>(
+        `${ENDPOINTS.media.list()}/albums`
+      );
+      return response.data;
+    },
+
+    albumTracks: async (albumName: string): Promise<ApiResponse<Media[]>> => {
+      const response = await this.client.get<ApiResponse<Media[]>>(
+        `${ENDPOINTS.media.list()}/albums/${encodeURIComponent(albumName)}`
+      );
+      return response.data;
     },
   };
 
@@ -488,6 +547,37 @@ class ApiClient {
     disconnect: async (): Promise<ApiResponse<{ message: string }>> => {
       const response = await this.client.delete<ApiResponse<{ message: string }>>(
         ENDPOINTS.youtubeSync.disconnect()
+      );
+      return response.data;
+    },
+  };
+
+  // Export endpoints
+  export = {
+    getItems: async (mode: ExportMode): Promise<ApiResponse<ExportableItem[]>> => {
+      const response = await this.client.get<ApiResponse<ExportableItem[]>>(
+        ENDPOINTS.export.items(mode)
+      );
+      return response.data;
+    },
+
+    checkStatus: async (
+      destinationPath: string,
+      mode: ExportMode,
+      itemIds: string[]
+    ): Promise<ApiResponse<ExportStatus[]>> => {
+      const response = await this.client.post<ApiResponse<ExportStatus[]>>(
+        ENDPOINTS.export.checkStatus(),
+        { destinationPath, mode, itemIds }
+      );
+      return response.data;
+    },
+
+    start: async (options: ExportOptions): Promise<ApiResponse<ExportResult>> => {
+      const response = await this.client.post<ApiResponse<ExportResult>>(
+        ENDPOINTS.export.start(),
+        options,
+        { timeout: 600000 } // 10 minutes - export can take a long time
       );
       return response.data;
     },

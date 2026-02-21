@@ -1054,6 +1054,168 @@
   font-style: normal;
 }
 
+/* Albums Page */
+.albums-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 24px;
+}
+
+.album-card {
+  background: #181818;
+  border-radius: 8px;
+  padding: 16px;
+  transition: background 0.3s ease;
+  text-decoration: none;
+}
+
+.album-card:hover {
+  background: #282828;
+  text-decoration: none;
+}
+
+.album-card-image {
+  width: 100%;
+  aspect-ratio: 1;
+  background: #282828;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #7f7f7f;
+  margin-bottom: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.album-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.album-card-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #7f7f7f;
+}
+
+.album-card-placeholder.hidden {
+  display: none;
+}
+
+.album-card-info {
+  min-width: 0;
+}
+
+.album-card-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.album-card-artist {
+  font-size: 14px;
+  color: #b3b3b3;
+  margin: 0 0 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.album-card-tracks {
+  font-size: 12px;
+  color: #727272;
+  margin: 0;
+}
+
+/* Album Detail Page */
+.album-header {
+  display: flex;
+  align-items: flex-end;
+  gap: 24px;
+  padding: 24px;
+  background: linear-gradient(180deg, #535353 0%, #1a1a1a 100%);
+  border-radius: 8px;
+  margin-bottom: 24px;
+}
+
+.album-cover {
+  width: 232px;
+  height: 232px;
+  background: #282828;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #7f7f7f;
+  box-shadow: 0 4px 60px rgba(0, 0, 0, 0.5);
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.album-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.album-cover-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #7f7f7f;
+}
+
+.album-cover-placeholder.hidden {
+  display: none;
+}
+
+.album-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.album-name {
+  font-size: 48px;
+  font-weight: 900;
+  margin: 8px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.album-artist {
+  font-size: 16px;
+  color: #fff;
+  margin: 8px 0;
+}
+
+.album-stats {
+  font-size: 14px;
+  color: #b3b3b3;
+}
+
+.album-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 0;
+  margin-bottom: 16px;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .liked-header {
@@ -1086,5 +1248,394 @@
 
   .disclaimer-section {
     padding: 16px;
+  }
+
+  .album-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .album-cover {
+    width: 120px;
+    height: 120px;
+  }
+
+  .album-name {
+    font-size: 32px;
+  }
+}
+
+/* =================================
+   Export Page Styles
+   ================================= */
+
+.export-page {
+  max-width: 1200px;
+}
+
+.export-settings {
+  background: var(--card-bg, #1e1e1e);
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.export-settings-row {
+  margin-bottom: 20px;
+}
+
+.export-settings-row:last-child {
+  margin-bottom: 0;
+}
+
+.export-settings-row.options-row {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.export-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.export-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary, #b3b3b3);
+}
+
+.export-input {
+  padding: 12px 16px;
+  background: var(--input-bg, #282828);
+  border: 1px solid var(--border-color, #333);
+  border-radius: 6px;
+  font-size: 14px;
+  color: var(--text-primary, #fff);
+  width: 100%;
+}
+
+.export-input:focus {
+  outline: none;
+  border-color: var(--accent-color, #1db954);
+}
+
+.export-input::placeholder {
+  color: var(--text-muted, #6a6a6a);
+}
+
+.export-input-group {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.export-input-group .export-input {
+  flex: 1;
+}
+
+.browse-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 16px;
+  background: var(--button-bg, #282828);
+  border: 1px solid var(--border-color, #333);
+  border-radius: 6px;
+  font-size: 14px;
+  color: var(--text-primary, #fff);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.browse-button:hover {
+  background: var(--button-hover-bg, #333);
+  border-color: var(--accent-color, #1db954);
+}
+
+.browse-button:active {
+  transform: scale(0.98);
+}
+
+.export-mode-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.export-mode-tab {
+  padding: 8px 16px;
+  background: var(--button-bg, #282828);
+  border: 1px solid var(--border-color, #333);
+  border-radius: 20px;
+  font-size: 14px;
+  color: var(--text-secondary, #b3b3b3);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.export-mode-tab:hover {
+  background: var(--button-hover-bg, #333);
+  color: var(--text-primary, #fff);
+}
+
+.export-mode-tab.active {
+  background: var(--accent-color, #1db954);
+  border-color: var(--accent-color, #1db954);
+  color: #000;
+  font-weight: 500;
+}
+
+.export-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.export-summary {
+  font-size: 14px;
+  color: var(--text-secondary, #b3b3b3);
+}
+
+.export-error {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 24px;
+  color: #ef4444;
+}
+
+.export-success {
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 24px;
+  color: #22c55e;
+}
+
+.export-progress {
+  background: var(--card-bg, #1e1e1e);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.export-progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+
+.export-progress-bar {
+  height: 8px;
+  background: var(--progress-bg, #333);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.export-progress-fill {
+  height: 100%;
+  background: var(--accent-color, #1db954);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.export-progress-count {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--text-secondary, #b3b3b3);
+  text-align: center;
+}
+
+.export-items {
+  margin-bottom: 24px;
+}
+
+.export-empty {
+  text-align: center;
+  padding: 48px;
+  color: var(--text-secondary, #b3b3b3);
+}
+
+.export-items-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+/* Export Item Card */
+.export-item-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: var(--card-bg, #1e1e1e);
+  border: 2px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.export-item-card:hover {
+  background: var(--card-hover-bg, #282828);
+}
+
+.export-item-card.selected {
+  border-color: var(--accent-color, #1db954);
+  background: rgba(29, 185, 84, 0.1);
+}
+
+.export-item-card.exported {
+  opacity: 0.7;
+}
+
+.export-item-checkbox {
+  flex-shrink: 0;
+}
+
+.export-item-checkbox input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--accent-color, #1db954);
+  cursor: pointer;
+}
+
+.export-item-thumbnail {
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--thumbnail-bg, #333);
+}
+
+.export-item-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.export-item-thumbnail-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--placeholder-bg, #282828);
+  color: var(--text-secondary, #b3b3b3);
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.export-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.export-item-name {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-primary, #fff);
+  margin: 0 0 4px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.export-item-artist {
+  font-size: 14px;
+  color: var(--text-secondary, #b3b3b3);
+  margin: 0 0 4px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.export-item-meta {
+  font-size: 12px;
+  color: var(--text-muted, #6a6a6a);
+  margin: 0;
+}
+
+.export-item-status {
+  flex-shrink: 0;
+}
+
+.export-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.export-status-badge.exported {
+  background: rgba(34, 197, 94, 0.2);
+  color: #22c55e;
+}
+
+.export-status-badge.not-exported {
+  background: var(--badge-bg, #333);
+  color: var(--text-secondary, #b3b3b3);
+}
+
+.export-action {
+  display: flex;
+  justify-content: center;
+  padding: 24px 0;
+}
+
+.export-button.primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 32px;
+  background: var(--accent-color, #1db954);
+  border: none;
+  border-radius: 24px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #000;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.export-button.primary:hover:not(:disabled) {
+  background: var(--accent-hover, #1ed760);
+  transform: scale(1.02);
+}
+
+.export-button.primary:disabled {
+  background: var(--button-disabled-bg, #333);
+  color: var(--text-muted, #6a6a6a);
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .export-items-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .export-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .export-settings-row.options-row {
+    flex-direction: column;
+    gap: 12px;
   }
 }

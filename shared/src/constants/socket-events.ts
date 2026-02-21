@@ -16,6 +16,7 @@ export const SOCKET_EVENTS = {
     COMPLETED: 'download:completed',
     ERROR: 'download:error',
     CANCELLED: 'download:cancelled',
+    RETRYING: 'download:retrying',
   },
 
   // Player sync events (for future multi-device support)
@@ -42,6 +43,14 @@ export const SOCKET_EVENTS = {
     ERROR: 'youtube-sync:error',
     AUTH_REQUIRED: 'youtube-sync:auth-required',
   },
+
+  // Export events
+  EXPORT: {
+    STARTED: 'export:started',
+    PROGRESS: 'export:progress',
+    COMPLETED: 'export:completed',
+    ERROR: 'export:error',
+  },
 } as const;
 
 // Type helpers for socket event payloads
@@ -59,6 +68,14 @@ export interface DownloadCompletedPayload {
 
 export interface DownloadErrorPayload {
   downloadId: string;
+  error: string;
+}
+
+export interface DownloadRetryingPayload {
+  downloadId: string;
+  attempt: number;
+  maxAttempts: number;
+  delayMs: number;
   error: string;
 }
 
@@ -81,4 +98,29 @@ export interface YouTubeSyncCompletedPayload {
 
 export interface YouTubeSyncErrorPayload {
   error: string;
+}
+
+// Export payload types
+export interface ExportStartedPayload {
+  totalItems: number;
+  mode: 'album' | 'artist' | 'playlist' | 'all';
+  destinationPath: string;
+}
+
+export interface ExportProgressPayload {
+  current: number;
+  total: number;
+  currentFile: string;
+  percentage: number;
+}
+
+export interface ExportCompletedPayload {
+  totalExported: number;
+  totalSkipped: number;
+  destinationPath: string;
+}
+
+export interface ExportErrorPayload {
+  error: string;
+  currentFile?: string;
 }

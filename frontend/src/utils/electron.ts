@@ -19,6 +19,7 @@ interface ElectronAPI {
   closeWindow: () => void;
   getMediaPath: () => Promise<string>;
   openFileLocation: (filePath: string) => void;
+  selectFolder: () => Promise<string | null>;
   removeAllListeners: (channel: string) => void;
 }
 
@@ -193,6 +194,18 @@ export async function getMediaPath(): Promise<string | null> {
   const api = getElectronAPI();
   if (api) {
     return api.getMediaPath();
+  }
+  return null;
+}
+
+/**
+ * Open native folder picker dialog
+ * Returns the selected folder path or null if cancelled
+ */
+export async function selectFolder(): Promise<string | null> {
+  const api = getElectronAPI();
+  if (api) {
+    return api.selectFolder();
   }
   return null;
 }

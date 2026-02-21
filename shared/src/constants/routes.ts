@@ -73,6 +73,14 @@ export const ROUTES = {
     SYNC: '/youtube-sync/sync',
     DISCONNECT: '/youtube-sync/disconnect',
   },
+
+  // Export
+  EXPORT: {
+    BASE: '/export',
+    CHECK_STATUS: '/export/check-status',
+    ITEMS: '/export/items/:mode',
+    START: '/export/start',
+  },
 } as const;
 
 // Helper type for route parameter replacement

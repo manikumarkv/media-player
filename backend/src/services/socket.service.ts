@@ -3,9 +3,14 @@ import { Server, type Socket } from 'socket.io';
 import {
   SOCKET_EVENTS,
   type DownloadProgressPayload,
+  type DownloadRetryingPayload,
   type YouTubeSyncProgressPayload,
   type YouTubeSyncCompletedPayload,
   type YouTubeSyncErrorPayload,
+  type ExportStartedPayload,
+  type ExportProgressPayload,
+  type ExportCompletedPayload,
+  type ExportErrorPayload,
 } from '@media-player/shared';
 import { config } from '../config/database.js';
 
@@ -59,6 +64,10 @@ export const socketService = {
     io?.emit(SOCKET_EVENTS.DOWNLOAD.CANCELLED, { downloadId });
   },
 
+  emitDownloadRetrying(data: DownloadRetryingPayload): void {
+    io?.emit(SOCKET_EVENTS.DOWNLOAD.RETRYING, data);
+  },
+
   // Library events
   emitMediaAdded(mediaId: string): void {
     io?.emit(SOCKET_EVENTS.LIBRARY.MEDIA_ADDED, { mediaId });
@@ -91,5 +100,22 @@ export const socketService = {
 
   emitYouTubeSyncError(data: YouTubeSyncErrorPayload): void {
     io?.emit(SOCKET_EVENTS.YOUTUBE_SYNC.ERROR, data);
+  },
+
+  // Export events
+  emitExportStarted(data: ExportStartedPayload): void {
+    io?.emit(SOCKET_EVENTS.EXPORT.STARTED, data);
+  },
+
+  emitExportProgress(data: ExportProgressPayload): void {
+    io?.emit(SOCKET_EVENTS.EXPORT.PROGRESS, data);
+  },
+
+  emitExportCompleted(data: ExportCompletedPayload): void {
+    io?.emit(SOCKET_EVENTS.EXPORT.COMPLETED, data);
+  },
+
+  emitExportError(data: ExportErrorPayload): void {
+    io?.emit(SOCKET_EVENTS.EXPORT.ERROR, data);
   },
 };

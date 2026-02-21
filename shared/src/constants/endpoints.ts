@@ -89,4 +89,11 @@ export const ENDPOINTS = {
     sync: () => endpoint(ROUTES.YOUTUBE_SYNC.SYNC),
     disconnect: () => endpoint(ROUTES.YOUTUBE_SYNC.DISCONNECT),
   },
+
+  // Export
+  export: {
+    checkStatus: () => endpoint(ROUTES.EXPORT.CHECK_STATUS),
+    items: (mode: string) => endpoint(ROUTES.EXPORT.ITEMS, { mode }),
+    start: () => endpoint(ROUTES.EXPORT.START),
+  },
 } as const;

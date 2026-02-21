@@ -1,8 +1,17 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { io, type Socket } from 'socket.io-client';
-import { SOCKET_EVENTS, type DownloadProgressPayload } from '@media-player/shared';
+import {
+  SOCKET_EVENTS,
+  type DownloadProgressPayload,
+  type ExportStartedPayload,
+  type ExportProgressPayload,
+  type ExportCompletedPayload,
+  type ExportErrorPayload,
+} from '@media-player/shared';
 
-const SOCKET_URL = import.meta.env.VITE_API_URL || '';
+// In Electron, VITE_API_URL may be empty but backend runs on port 3000
+// Default to localhost:3000 for socket connection
+const SOCKET_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 interface UseSocketOptions {
   onDownloadStarted?: (data: { downloadId: string; title: string }) => void;
@@ -13,6 +22,10 @@ interface UseSocketOptions {
   onMediaAdded?: (data: { mediaId: string }) => void;
   onMediaUpdated?: (data: { mediaId: string }) => void;
   onMediaDeleted?: (data: { mediaId: string }) => void;
+  onExportStarted?: (data: ExportStartedPayload) => void;
+  onExportProgress?: (data: ExportProgressPayload) => void;
+  onExportCompleted?: (data: ExportCompletedPayload) => void;
+  onExportError?: (data: ExportErrorPayload) => void;
 }
 
 export function useSocket(options: UseSocketOptions = {}) {
@@ -68,6 +81,23 @@ export function useSocket(options: UseSocketOptions = {}) {
 
     socket.on(SOCKET_EVENTS.LIBRARY.MEDIA_DELETED, (data: { mediaId: string }) => {
       callbacksRef.current.onMediaDeleted?.(data);
+    });
+
+    // Export events
+    socket.on(SOCKET_EVENTS.EXPORT.STARTED, (data: ExportStartedPayload) => {
+      callbacksRef.current.onExportStarted?.(data);
+    });
+
+    socket.on(SOCKET_EVENTS.EXPORT.PROGRESS, (data: ExportProgressPayload) => {
+      callbacksRef.current.onExportProgress?.(data);
+    });
+
+    socket.on(SOCKET_EVENTS.EXPORT.COMPLETED, (data: ExportCompletedPayload) => {
+      callbacksRef.current.onExportCompleted?.(data);
+    });
+
+    socket.on(SOCKET_EVENTS.EXPORT.ERROR, (data: ExportErrorPayload) => {
+      callbacksRef.current.onExportError?.(data);
     });
 
     return () => {

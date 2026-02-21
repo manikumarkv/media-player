@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, shell, Notification } from 'electron';
+import { app, BrowserWindow, ipcMain, shell, Notification, dialog } from 'electron';
 import { createMainWindow, getMainWindow, showMainWindow } from './window';
 import { createTray, destroyTray, updateTrayState } from './tray';
 import { registerMediaKeys, unregisterMediaKeys } from './media-keys';
@@ -196,6 +196,15 @@ if (!gotTheLock) {
     // File operations
     ipcMain.on('open-file-location', (_event, filePath) => {
       shell.showItemInFolder(filePath);
+    });
+
+    // Folder picker dialog
+    ipcMain.handle('select-folder', async () => {
+      const result = await dialog.showOpenDialog({
+        properties: ['openDirectory', 'createDirectory'],
+        title: 'Select Export Folder',
+      });
+      return result.canceled ? null : result.filePaths[0];
     });
   }
 }
