@@ -20,6 +20,15 @@ const mockDownload: Download = {
   mediaId: null,
   createdAt: '2026-02-17T00:00:00Z',
   updatedAt: '2026-02-17T00:00:00Z',
+  speed: null,
+  eta: null,
+};
+
+const mockDownloadWithSpeedEta: Download = {
+  ...mockDownload,
+  id: 'download-speed',
+  speed: '1.2 MB/s',
+  eta: '00:45',
 };
 
 const mockCompletedDownload: Download = {
@@ -273,6 +282,16 @@ describe('DownloadPage', () => {
       expect(screen.getByText('Active Downloads')).toBeInTheDocument();
       expect(screen.getByText('Test Video')).toBeInTheDocument();
       expect(screen.getByText('Downloading 50%')).toBeInTheDocument();
+    });
+
+    it('displays speed and ETA when available', () => {
+      useDownloadStore.setState({
+        downloads: [mockDownloadWithSpeedEta],
+      });
+      render(<DownloadPage />);
+
+      expect(screen.getByText(/1\.2 MB\/s/)).toBeInTheDocument();
+      expect(screen.getByText(/ETA 00:45/)).toBeInTheDocument();
     });
 
     it('renders completed downloads section', () => {

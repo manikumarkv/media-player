@@ -1,4 +1,4 @@
-import fs from 'fs';
+import fs from 'fs/promises';
 import path from 'path';
 import { prisma } from '../config/database.js';
 import { NotFoundError, BadRequestError } from '../errors/index.js';
@@ -6,6 +6,7 @@ import { youtubeService, type PlaylistInfo } from './youtube.service.js';
 import { mediaService } from './media.service.js';
 import { playlistService } from './playlist.service.js';
 import { socketService } from './socket.service.js';
+import { downloadQueueService } from './download-queue.service.js';
 import type { Download, DownloadStatus } from '../types/index.js';
 
 export interface PlaylistDownloadOptions {
@@ -112,24 +113,53 @@ export const downloadService = {
       },
     });
 
-    // Start async download process with rich metadata
-    void this.processDownload(download.id, url, {
-      id: info.id,
-      title: info.title,
-      duration: info.duration,
-      artist: info.artist,
-      album: info.album,
-      releaseYear: info.releaseYear,
-      channel: info.channel,
-    });
-
     // Emit started event
     socketService.emitDownloadStarted(download.id, info.title);
+
+    // Queue the download with auto-retry
+    void downloadQueueService.enqueueWithRetry(
+      download.id,
+      () =>
+        this.executeDownload(download.id, url, {
+          id: info.id,
+          title: info.title,
+          duration: info.duration,
+          artist: info.artist,
+          album: info.album,
+          releaseYear: info.releaseYear,
+          channel: info.channel,
+        }),
+      {
+        maxAttempts: 3,
+        baseDelayMs: 5000, // 5s -> 15s -> 45s
+        onRetry: ({ attempt, maxAttempts, delayMs, error }) => {
+          socketService.emitDownloadRetrying({
+            downloadId: download.id,
+            attempt,
+            maxAttempts,
+            delayMs,
+            error: error.message,
+          });
+        },
+      }
+    ).catch((error: unknown) => {
+      // Final failure after all retries exhausted
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      void prisma.download.update({
+        where: { id: download.id },
+        data: { status: 'FAILED', error: errorMessage },
+      });
+      socketService.emitDownloadError(download.id, errorMessage);
+    });
 
     return download;
   },
 
-  async processDownload(
+  /**
+   * Execute a download - this method throws on error for retry support
+   * Used by the queue system with auto-retry
+   */
+  async executeDownload(
     downloadId: string,
     url: string,
     info: {
@@ -143,27 +173,27 @@ export const downloadService = {
     },
     playlistId?: string
   ): Promise<void> {
-    try {
-      // Update status to downloading
-      await this.updateStatus(downloadId, 'DOWNLOADING');
+    // Update status to downloading
+    await this.updateStatus(downloadId, 'DOWNLOADING');
 
-      // Download audio
-      const result = await youtubeService.downloadAudio(url, downloadId, {}, (progress) => {
-        void this.updateProgress(downloadId, Math.round(progress.percent));
-        socketService.emitDownloadProgress({
-          downloadId,
-          progress: progress.percent,
-          speed: progress.speed,
-          eta: progress.eta,
-        });
+    // Download audio
+    const result = await youtubeService.downloadAudio(url, downloadId, {}, (progress) => {
+      void this.updateProgress(downloadId, Math.round(progress.percent));
+      socketService.emitDownloadProgress({
+        downloadId,
+        progress: progress.percent,
+        speed: progress.speed,
+        eta: progress.eta,
       });
+    });
 
       // Update status to processing
       await this.updateStatus(downloadId, 'PROCESSING');
       await this.updateProgress(downloadId, 95);
 
       // Get file size
-      const fileSize = fs.statSync(result.filePath).size;
+      const fileStats = await fs.stat(result.filePath);
+      const fileSize = fileStats.size;
 
       // Detect mimeType based on file extension
       const ext = path.extname(result.filePath).toLowerCase();
@@ -219,22 +249,9 @@ export const downloadService = {
         await playlistService.addItem(playlistId, media.id);
       }
 
-      // Emit completion event
-      socketService.emitDownloadCompleted(downloadId, media.id);
-      socketService.emitMediaAdded(media.id);
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-
-      await prisma.download.update({
-        where: { id: downloadId },
-        data: {
-          status: 'FAILED',
-          error: errorMessage,
-        },
-      });
-
-      socketService.emitDownloadError(downloadId, errorMessage);
-    }
+    // Emit completion event
+    socketService.emitDownloadCompleted(downloadId, media.id);
+    socketService.emitMediaAdded(media.id);
   },
 
   async updateStatus(id: string, status: DownloadStatus): Promise<Download> {
@@ -294,17 +311,44 @@ export const downloadService = {
 
     // Get video info and restart with rich metadata
     const info = await youtubeService.getVideoInfo(download.url);
-    void this.processDownload(id, download.url, {
-      id: info.id,
-      title: info.title,
-      duration: info.duration,
-      artist: info.artist,
-      album: info.album,
-      releaseYear: info.releaseYear,
-      channel: info.channel,
-    });
 
     socketService.emitDownloadStarted(id, info.title);
+
+    // Queue the download with auto-retry
+    void downloadQueueService.enqueueWithRetry(
+      id,
+      () =>
+        this.executeDownload(id, download.url, {
+          id: info.id,
+          title: info.title,
+          duration: info.duration,
+          artist: info.artist,
+          album: info.album,
+          releaseYear: info.releaseYear,
+          channel: info.channel,
+        }),
+      {
+        maxAttempts: 3,
+        baseDelayMs: 5000,
+        onRetry: ({ attempt, maxAttempts, delayMs, error }) => {
+          socketService.emitDownloadRetrying({
+            downloadId: id,
+            attempt,
+            maxAttempts,
+            delayMs,
+            error: error.message,
+          });
+        },
+      }
+    ).catch((error: unknown) => {
+      // Final failure after all retries exhausted
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      void prisma.download.update({
+        where: { id },
+        data: { status: 'FAILED', error: errorMessage },
+      });
+      socketService.emitDownloadError(id, errorMessage);
+    });
 
     return updated;
   },
@@ -416,15 +460,28 @@ export const downloadService = {
 
       downloads.push(download);
 
-      // Get full video info for rich metadata (artist, album, year)
-      // This is done in the background for each video in the playlist
-      void (async () => {
-        try {
-          const videoInfo = await youtubeService.getVideoInfo(videoUrl);
-          await this.processDownload(
-            download.id,
-            videoUrl,
-            {
+      // Emit started event (before queuing so UI knows it's pending)
+      socketService.emitDownloadStarted(download.id, video.title);
+
+      // Queue the download with auto-retry
+      // This ensures only 2 concurrent downloads at a time (default concurrency)
+      void downloadQueueService.enqueueWithRetry(
+        download.id,
+        async () => {
+          // Get full video info for rich metadata (artist, album, year)
+          let info: {
+            id: string;
+            title: string;
+            duration: number;
+            artist?: string | null;
+            album?: string | null;
+            releaseYear?: number | null;
+            channel?: string;
+          };
+
+          try {
+            const videoInfo = await youtubeService.getVideoInfo(videoUrl);
+            info = {
               id: videoInfo.id,
               title: videoInfo.title,
               duration: videoInfo.duration,
@@ -432,27 +489,40 @@ export const downloadService = {
               album: videoInfo.album,
               releaseYear: videoInfo.releaseYear,
               channel: videoInfo.channel,
-            },
-            createdPlaylistId
-          );
-        } catch (error) {
-          console.error(`Failed to get video info for ${video.id}:`, error);
-          // Fall back to basic info if metadata fetch fails
-          await this.processDownload(
-            download.id,
-            videoUrl,
-            {
+            };
+          } catch {
+            // Fall back to basic info if metadata fetch fails
+            info = {
               id: video.id,
               title: video.title,
               duration: video.duration,
-            },
-            createdPlaylistId
-          );
-        }
-      })();
+            };
+          }
 
-      // Emit started event
-      socketService.emitDownloadStarted(download.id, video.title);
+          await this.executeDownload(download.id, videoUrl, info, createdPlaylistId);
+        },
+        {
+          maxAttempts: 3,
+          baseDelayMs: 5000, // 5s -> 15s -> 45s
+          onRetry: ({ attempt, maxAttempts, delayMs, error }) => {
+            socketService.emitDownloadRetrying({
+              downloadId: download.id,
+              attempt,
+              maxAttempts,
+              delayMs,
+              error: error.message,
+            });
+          },
+        }
+      ).catch((error: unknown) => {
+        // Final failure after all retries exhausted
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        void prisma.download.update({
+          where: { id: download.id },
+          data: { status: 'FAILED', error: errorMessage },
+        });
+        socketService.emitDownloadError(download.id, errorMessage);
+      });
     }
 
     return {

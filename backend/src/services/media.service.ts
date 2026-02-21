@@ -209,4 +209,53 @@ export const mediaService = {
       likedCount,
     };
   },
+
+  async getAlbums(): Promise<
+    {
+      name: string;
+      artist: string | null;
+      trackCount: number;
+      totalDuration: number;
+      coverMediaId: string | null;
+    }[]
+  > {
+    // Get album stats using groupBy
+    const albumStats = await prisma.media.groupBy({
+      by: ['album'],
+      where: { album: { not: null } },
+      _count: { id: true },
+      _sum: { duration: true },
+      _min: { artist: true },
+      orderBy: { album: 'asc' },
+    });
+
+    // Get one media with thumbnail per album for cover art
+    const albumNames = albumStats.map((a) => a.album!);
+    const coverMedia = await prisma.media.findMany({
+      where: {
+        album: { in: albumNames },
+        thumbnailPath: { not: null },
+      },
+      select: { id: true, album: true },
+      distinct: ['album'],
+    });
+
+    // Create a map of album name to cover media ID
+    const coverMap = new Map(coverMedia.map((m) => [m.album, m.id]));
+
+    return albumStats.map((album) => ({
+      name: album.album!,
+      artist: album._min.artist ?? null,
+      trackCount: album._count.id,
+      totalDuration: album._sum.duration ?? 0,
+      coverMediaId: coverMap.get(album.album!) ?? null,
+    }));
+  },
+
+  async getAlbumTracks(albumName: string): Promise<Media[]> {
+    return prisma.media.findMany({
+      where: { album: albumName },
+      orderBy: { title: 'asc' },
+    });
+  },
 };

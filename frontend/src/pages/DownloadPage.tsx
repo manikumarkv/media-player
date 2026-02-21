@@ -430,8 +430,16 @@ function DownloadItem({ download, onCancel, onRetry, onDelete }: DownloadItemPro
     switch (status) {
       case 'PENDING':
         return 'Waiting...';
-      case 'DOWNLOADING':
-        return `Downloading ${String(download.progress)}%`;
+      case 'DOWNLOADING': {
+        let statusText = `Downloading ${String(download.progress)}%`;
+        if (download.speed) {
+          statusText += ` at ${download.speed}`;
+        }
+        if (download.eta) {
+          statusText += ` - ETA ${download.eta}`;
+        }
+        return statusText;
+      }
       case 'PROCESSING':
         return 'Processing...';
       case 'COMPLETED':

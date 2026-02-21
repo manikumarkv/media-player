@@ -13,6 +13,8 @@ export interface Download {
   mediaId: string | null;
   createdAt: string;
   updatedAt: string;
+  speed: string | null;
+  eta: string | null;
 }
 
 export interface VideoInfo {
@@ -86,7 +88,7 @@ interface DownloadState {
 
   // Socket event handlers
   handleDownloadStarted: (data: { downloadId: string; title: string }) => void;
-  handleDownloadProgress: (data: { downloadId: string; progress: number }) => void;
+  handleDownloadProgress: (data: { downloadId: string; progress: number; speed?: string; eta?: string }) => void;
   handleDownloadCompleted: (data: { downloadId: string; mediaId: string }) => void;
   handleDownloadError: (data: { downloadId: string; error: string }) => void;
   handleDownloadCancelled: (data: { downloadId: string }) => void;
@@ -330,7 +332,7 @@ export const useDownloadStore = create<DownloadState>((set, get) => ({
     set((state) => ({
       downloads: state.downloads.map((d) =>
         d.id === data.downloadId
-          ? { ...d, progress: data.progress }
+          ? { ...d, progress: data.progress, speed: data.speed ?? null, eta: data.eta ?? null }
           : d
       ),
     }));

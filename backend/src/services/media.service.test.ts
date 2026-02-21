@@ -266,4 +266,84 @@ describe('mediaService', () => {
       });
     });
   });
+
+  describe('getAlbums', () => {
+    it('should return unique albums with metadata and cover media ID', async () => {
+      const mockAlbumStats = [
+        { album: 'Album A', _count: { id: 5 }, _sum: { duration: 1200 }, _min: { artist: 'Artist A' } },
+        { album: 'Album B', _count: { id: 3 }, _sum: { duration: 800 }, _min: { artist: 'Artist B' } },
+      ];
+      const mockCoverMedia = [
+        { id: 'media-1', album: 'Album A' },
+        { id: 'media-2', album: 'Album B' },
+      ];
+      mockPrisma.media.groupBy.mockResolvedValue(mockAlbumStats);
+      mockPrisma.media.findMany.mockResolvedValue(mockCoverMedia);
+
+      const result = await mediaService.getAlbums();
+
+      expect(result).toHaveLength(2);
+      expect(result[0]).toEqual({
+        name: 'Album A',
+        artist: 'Artist A',
+        trackCount: 5,
+        totalDuration: 1200,
+        coverMediaId: 'media-1',
+      });
+      expect(result[1]).toEqual({
+        name: 'Album B',
+        artist: 'Artist B',
+        trackCount: 3,
+        totalDuration: 800,
+        coverMediaId: 'media-2',
+      });
+    });
+
+    it('should return empty array when no albums exist', async () => {
+      mockPrisma.media.groupBy.mockResolvedValue([]);
+      mockPrisma.media.findMany.mockResolvedValue([]);
+
+      const result = await mediaService.getAlbums();
+
+      expect(result).toEqual([]);
+    });
+
+    it('should return null coverMediaId when album has no thumbnail', async () => {
+      const mockAlbumStats = [
+        { album: 'Album A', _count: { id: 2 }, _sum: { duration: 500 }, _min: { artist: 'Artist A' } },
+      ];
+      mockPrisma.media.groupBy.mockResolvedValue(mockAlbumStats);
+      mockPrisma.media.findMany.mockResolvedValue([]); // No media with thumbnails
+
+      const result = await mediaService.getAlbums();
+
+      expect(result[0].coverMediaId).toBeNull();
+    });
+  });
+
+  describe('getAlbumTracks', () => {
+    it('should return tracks for a specific album', async () => {
+      const mockTracks = [
+        { id: '1', title: 'Track 1', album: 'Test Album', duration: 180 },
+        { id: '2', title: 'Track 2', album: 'Test Album', duration: 200 },
+      ];
+      mockPrisma.media.findMany.mockResolvedValue(mockTracks);
+
+      const result = await mediaService.getAlbumTracks('Test Album');
+
+      expect(result).toEqual(mockTracks);
+      expect(mockPrisma.media.findMany).toHaveBeenCalledWith({
+        where: { album: 'Test Album' },
+        orderBy: { title: 'asc' },
+      });
+    });
+
+    it('should return empty array when album has no tracks', async () => {
+      mockPrisma.media.findMany.mockResolvedValue([]);
+
+      const result = await mediaService.getAlbumTracks('Nonexistent Album');
+
+      expect(result).toEqual([]);
+    });
+  });
 });

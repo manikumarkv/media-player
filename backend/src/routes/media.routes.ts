@@ -27,6 +27,12 @@ router.get(`${ROUTES.MEDIA.BASE}/recent`, mediaController.getRecentlyAdded);
 // GET /media/most-played - Get most played media
 router.get(`${ROUTES.MEDIA.BASE}/most-played`, mediaController.getMostPlayed);
 
+// GET /media/albums - Get all albums
+router.get(`${ROUTES.MEDIA.BASE}/albums`, mediaController.getAlbums);
+
+// GET /media/albums/:albumName - Get tracks for a specific album
+router.get(`${ROUTES.MEDIA.BASE}/albums/:albumName`, mediaController.getAlbumTracks);
+
 // GET /media/:id - Get media by ID
 router.get(
   ROUTES.MEDIA.BY_ID,

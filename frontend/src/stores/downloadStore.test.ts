@@ -29,6 +29,8 @@ const mockDownload: Download = {
   mediaId: null,
   createdAt: '2026-02-17T00:00:00Z',
   updatedAt: '2026-02-17T00:00:00Z',
+  speed: null,
+  eta: null,
 };
 
 const mockCompletedDownload: Download = {
@@ -378,11 +380,52 @@ describe('downloadStore', () => {
           useDownloadStore.getState().handleDownloadProgress({
             downloadId: mockDownload.id,
             progress: 75,
+            speed: '1.2 MB/s',
+            eta: '00:45',
           });
         });
 
         const state = useDownloadStore.getState();
         expect(state.downloads[0].progress).toBe(75);
+      });
+
+      it('updates download speed and eta', () => {
+        useDownloadStore.setState({ downloads: [mockDownload] });
+
+        act(() => {
+          useDownloadStore.getState().handleDownloadProgress({
+            downloadId: mockDownload.id,
+            progress: 50,
+            speed: '2.5 MB/s',
+            eta: '01:30',
+          });
+        });
+
+        const state = useDownloadStore.getState();
+        expect(state.downloads[0].speed).toBe('2.5 MB/s');
+        expect(state.downloads[0].eta).toBe('01:30');
+      });
+
+      it('clears speed and eta when not provided', () => {
+        const downloadWithSpeed = {
+          ...mockDownload,
+          speed: '1.0 MB/s',
+          eta: '00:30',
+        };
+        useDownloadStore.setState({ downloads: [downloadWithSpeed] });
+
+        act(() => {
+          useDownloadStore.getState().handleDownloadProgress({
+            downloadId: mockDownload.id,
+            progress: 80,
+            speed: '',
+            eta: '',
+          });
+        });
+
+        const state = useDownloadStore.getState();
+        expect(state.downloads[0].speed).toBe('');
+        expect(state.downloads[0].eta).toBe('');
       });
     });
 

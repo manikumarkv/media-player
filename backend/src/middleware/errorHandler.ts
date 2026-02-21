@@ -7,7 +7,10 @@ export function errorHandler(
   res: Response,
   _next: NextFunction
 ): void {
-  console.error('Error:', err);
+  console.error('=== ERROR HANDLER ===');
+  console.error('Error name:', err.name);
+  console.error('Error message:', err.message);
+  console.error('Error stack:', err.stack);
 
   if (err instanceof AppError) {
     res.status(err.statusCode).json({

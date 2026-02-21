@@ -200,4 +200,31 @@ export const mediaController = {
       next(error);
     }
   },
+
+  async getAlbums(
+    _req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const albums = await mediaService.getAlbums();
+      res.json({ success: true, data: albums });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async getAlbumTracks(
+    req: Request<{ albumName: string }>,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const albumName = decodeURIComponent(req.params.albumName);
+      const tracks = await mediaService.getAlbumTracks(albumName);
+      res.json({ success: true, data: tracks });
+    } catch (error) {
+      next(error);
+    }
+  },
 };

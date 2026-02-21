@@ -1,6 +1,6 @@
 import { spawn, type ChildProcess } from 'child_process';
 import path from 'path';
-import fs from 'fs';
+import fs from 'fs/promises';
 import { config } from '../config/database.js';
 import { BadRequestError } from '../errors/index.js';
 
@@ -211,9 +211,7 @@ export const youtubeService = {
     const outputDir = options.outputPath ?? config.mediaPath;
 
     // Ensure output directory exists
-    if (!fs.existsSync(outputDir)) {
-      fs.mkdirSync(outputDir, { recursive: true });
-    }
+    await fs.mkdir(outputDir, { recursive: true });
 
     // Sanitize filename
     const sanitizedTitle = info.title
@@ -288,29 +286,35 @@ export const youtubeService = {
         }
 
         // Find the actual output file (could be opus, webm, m4a depending on source)
-        const files = fs.readdirSync(outputDir);
-        const audioExtensions = ['.opus', '.webm', '.m4a', '.ogg', '.mp3'];
-        const audioFile = files.find(
-          (f) => f.startsWith(sanitizedTitle) && audioExtensions.some((ext) => f.endsWith(ext))
-        );
+        void (async () => {
+          try {
+            const files = await fs.readdir(outputDir);
+            const audioExtensions = ['.opus', '.webm', '.m4a', '.ogg', '.mp3'];
+            const audioFile = files.find(
+              (f) => f.startsWith(sanitizedTitle) && audioExtensions.some((ext) => f.endsWith(ext))
+            );
 
-        if (!audioFile) {
-          reject(new BadRequestError('Output file not found'));
-          return;
-        }
+            if (!audioFile) {
+              reject(new BadRequestError('Output file not found'));
+              return;
+            }
 
-        const filePath = path.join(outputDir, audioFile);
-        // Thumbnail could be webp or jpg depending on source
-        const thumbnailFile = files.find(
-          (f) => f.startsWith(sanitizedTitle) && (f.endsWith('.webp') || f.endsWith('.jpg'))
-        );
-        const actualThumbnailPath = thumbnailFile ? path.join(outputDir, thumbnailFile) : undefined;
+            const filePath = path.join(outputDir, audioFile);
+            // Thumbnail could be webp or jpg depending on source
+            const thumbnailFile = files.find(
+              (f) => f.startsWith(sanitizedTitle) && (f.endsWith('.webp') || f.endsWith('.jpg'))
+            );
+            const actualThumbnailPath = thumbnailFile ? path.join(outputDir, thumbnailFile) : undefined;
 
-        resolve({
-          filePath,
-          thumbnailPath: actualThumbnailPath,
-          info,
-        });
+            resolve({
+              filePath,
+              thumbnailPath: actualThumbnailPath,
+              info,
+            });
+          } catch (err) {
+            reject(new BadRequestError(`Failed to find output file: ${err instanceof Error ? err.message : 'Unknown error'}`));
+          }
+        })();
       });
 
       process.on('error', (err) => {

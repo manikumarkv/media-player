@@ -14,6 +14,7 @@ export const mockPrisma: MockPrismaType = {
     delete: vi.fn(),
     count: vi.fn(),
     aggregate: vi.fn(),
+    groupBy: vi.fn(),
   },
   playlist: {
     findMany: vi.fn(),
