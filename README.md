@@ -51,6 +51,20 @@ Full-featured player bar with **shuffle, repeat, volume controls**, and a **slee
   <img src="assets/screenshots/player.png" alt="Player" width="800" />
 </p>
 
+### Download
+Paste any YouTube URL — single video or full playlist. **Selective track picking**, real-time progress via WebSocket, auto-retry with exponential backoff. Downloads process in parallel with cancel support.
+
+<p align="center">
+  <img src="assets/screenshots/download.png" alt="Download" width="800" />
+</p>
+
+### Playlist Download
+Paste a YouTube playlist link to see all tracks with duration. **Select/deselect individual tracks**, choose sort order, and optionally create an in-app playlist automatically.
+
+<p align="center">
+  <img src="assets/screenshots/download-playlist.png" alt="Playlist Download" width="800" />
+</p>
+
 ### Liked Songs
 Spotify-style liked songs page with **gradient header**. Like any track with one click — it appears here instantly.
 
