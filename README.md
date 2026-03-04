@@ -30,36 +30,60 @@
 
 ## Screenshots
 
-<p align="center">
-  <img src="assets/screenshots/home.png" alt="Home — Dashboard with recently played, recently added, and most played" width="800" />
-</p>
+### Home
+Welcome dashboard with **Recently Played**, **Recently Added**, and **Most Played** sections. Pick up where you left off.
 
 <p align="center">
-  <img src="assets/screenshots/library.png" alt="Library — Grid view with search and sort" width="800" />
+  <img src="assets/screenshots/home.png" alt="Home" width="800" />
 </p>
 
-<p align="center">
-  <img src="assets/screenshots/export.png" alt="Export — Export manager with album/artist/playlist modes" width="800" />
-</p>
+### Library
+Browse your full collection in **grid or list view**. Search, sort, and filter across 650+ tracks. Toggle between views with one click.
 
 <p align="center">
-  <img src="assets/screenshots/liked-songs.png" alt="Liked Songs — Playlist view with gradient header" width="800" />
+  <img src="assets/screenshots/library.png" alt="Library" width="800" />
 </p>
 
-<p align="center">
-  <img src="assets/screenshots/history.png" alt="History — Recently played with date grouping and play counts" width="800" />
-</p>
+### Player
+Full-featured player bar with **shuffle, repeat, volume controls**, and a **sleep timer** with 15m–90m presets and fade-out. Customizable keyboard shortcuts for every action.
 
 <p align="center">
-  <img src="assets/screenshots/playlists.png" alt="Playlists — Grid view with auto-created YouTube playlists" width="800" />
+  <img src="assets/screenshots/player.png" alt="Player" width="800" />
 </p>
 
-<p align="center">
-  <img src="assets/screenshots/albums.png" alt="Albums — Browse by album with artist and track count" width="800" />
-</p>
+### Liked Songs
+Spotify-style liked songs page with **gradient header**. Like any track with one click — it appears here instantly.
 
 <p align="center">
-  <img src="assets/screenshots/player.png" alt="Player — Now playing with sleep timer, shuffle, repeat, and volume controls" width="800" />
+  <img src="assets/screenshots/liked-songs.png" alt="Liked Songs" width="800" />
+</p>
+
+### Playlists
+Auto-created playlists from **YouTube playlist downloads**. Create custom playlists, reorder tracks, add/remove songs.
+
+<p align="center">
+  <img src="assets/screenshots/playlists.png" alt="Playlists" width="800" />
+</p>
+
+### Albums
+Browse by album with **artist names and track counts**. Click into any album to see its full tracklist.
+
+<p align="center">
+  <img src="assets/screenshots/albums.png" alt="Albums" width="800" />
+</p>
+
+### History
+**Date-grouped play history** with play counts and duration. Clear history with one click. Track your listening habits.
+
+<p align="center">
+  <img src="assets/screenshots/history.png" alt="History" width="800" />
+</p>
+
+### Export
+Export music to local folders organized **by album, artist, or playlist**. Includes options for artwork and M3U playlist file generation.
+
+<p align="center">
+  <img src="assets/screenshots/export.png" alt="Export" width="800" />
 </p>
 
 ---
